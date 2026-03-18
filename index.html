@@ -184,6 +184,30 @@ select option{background:var(--surface2)}
 .parsed-value.editable{background:var(--surface3);border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:text}
 .parsed-tag{display:inline-block;padding:2px 8px;margin:2px;border-radius:4px;font-size:10px;background:var(--gold-glow);color:var(--gold);border:1px solid var(--gold-dim)}
 
+/* Dashboard */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dash-stat{text-align:center;padding:16px}
+.dash-stat-num{font-size:28px;font-weight:700;color:var(--gold)}
+.dash-stat-label{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.dash-alert{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:6px;margin-bottom:8px;font-size:12px;border:1px solid}
+.dash-alert.urgent{background:rgba(204,68,68,.08);border-color:rgba(204,68,68,.3);color:var(--danger)}
+.dash-alert.warning{background:rgba(204,170,68,.08);border-color:rgba(204,170,68,.3);color:var(--warn)}
+.dash-alert.info{background:var(--gold-glow);border-color:var(--gold-dim);color:var(--gold)}
+.dash-alert .alert-icon{font-size:16px}
+.dash-timeline{position:relative;padding-left:20px}
+.dash-timeline::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:1px;background:var(--border)}
+.dash-tl-item{position:relative;padding:8px 0 8px 16px;font-size:12px;color:var(--text2)}
+.dash-tl-item::before{content:'';position:absolute;left:-17px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--gold);border:2px solid var(--bg)}
+.dash-tl-item .tl-date{font-size:10px;color:var(--text3)}
+.weekly-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.weekly-row:last-child{border-bottom:none}
+.weekly-day{min-width:30px;font-weight:700;color:var(--gold)}
+.batch-check{width:16px;height:16px;accent-color:var(--gold);cursor:pointer}
+.price-calc{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;font-size:12px}
+.price-calc label{color:var(--text2)}
+.price-calc input{width:100px;font-size:12px;padding:4px 8px;text-align:right}
+.price-calc .rate-val{color:var(--gold);font-weight:600;min-width:80px;text-align:right}
+
 .hidden{display:none!important}
 .gold-line{height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);margin:20px 0}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -227,7 +251,7 @@ select option{background:var(--surface2)}
 <script>
 // ─── State ───
 const S = {
-  tab: 'calendar',
+  tab: 'dashboard',
   calView: 'month',
   calDate: new Date(),
   posts: JSON.parse(localStorage.getItem('ihq_posts') || '[]'),
@@ -237,6 +261,15 @@ const S = {
   contacts: JSON.parse(localStorage.getItem('ihq_contacts') || '[]'),
   scripts: JSON.parse(localStorage.getItem('ihq_scripts') || '[]'),
   crmFilter: 'all',
+  crmSelected: [],
+  weeklyTemplates: JSON.parse(localStorage.getItem('ihq_weekly') || 'null') || [
+    { day: 1, title: '전시 리뷰', account: 0 },
+    { day: 3, title: '카페/공간 추천', account: 1 },
+    { day: 5, title: 'OOTD / 패션', account: 0 },
+  ],
+  priceRates: JSON.parse(localStorage.getItem('ihq_rates') || 'null') || {
+    feed: 500000, reels: 800000, story: 200000, youtube: 2000000, shorts: 1000000, blog: 400000,
+  },
   thumbs: JSON.parse(localStorage.getItem('ihq_thumbs') || '[]'),
   thumb: {
     size: 'igstory',
@@ -349,6 +382,7 @@ function initBrandDB() {
 
 // ─── Tabs ───
 const TABS = [
+  { id: 'dashboard', label: '대시보드' },
   { id: 'calendar', label: '캘린더 Calendar' },
   { id: 'carousel', label: '캐러셀 Carousel' },
   { id: 'caption', label: 'AI 캡션 Caption' },
@@ -372,13 +406,300 @@ function switchTab(id) {
 
 function renderMain() {
   const m = document.getElementById('main');
-  const fn = { calendar: renderCalendar, carousel: renderCarousel, caption: renderCaption, deals: renderDeals, script: renderScript, crm: renderCRM, thumbnail: renderThumbnail };
+  const fn = { dashboard: renderDashboard, calendar: renderCalendar, carousel: renderCarousel, caption: renderCaption, deals: renderDeals, script: renderScript, crm: renderCRM, thumbnail: renderThumbnail };
   m.innerHTML = `<div class="tab-content">${fn[S.tab]()}</div>`;
   if (S.tab === 'carousel') initCarouselEvents();
   if (S.tab === 'thumbnail') initThumbCanvas();
 }
 
-// ─── Calendar (unchanged) ───
+// ─── Dashboard ───
+function renderDashboard() {
+  const today = new Date();
+  const todayStr = fmt(today);
+
+  // Deadline alerts
+  const alerts = [];
+  S.deals.filter(d => d.status !== 'completed' && d.deadline).forEach(d => {
+    const dl = new Date(d.deadline);
+    const diff = Math.ceil((dl - today) / 86400000);
+    if (diff < 0) alerts.push({ type: 'urgent', icon: '🔴', text: `${d.brand} — 마감일 ${Math.abs(diff)}일 초과!`, brand: d.brand });
+    else if (diff === 0) alerts.push({ type: 'urgent', icon: '🔴', text: `${d.brand} — 오늘 마감!`, brand: d.brand });
+    else if (diff <= 3) alerts.push({ type: 'warning', icon: '🟡', text: `${d.brand} — D-${diff} 마감 임박`, brand: d.brand });
+    else if (diff <= 7) alerts.push({ type: 'info', icon: '🟢', text: `${d.brand} — D-${diff}`, brand: d.brand });
+  });
+
+  // Follow-up needed (CRM contacts with email sent but no follow-up in 5+ days)
+  const emailLogs = JSON.parse(localStorage.getItem('ihq_email_logs') || '[]');
+  S.contacts.filter(c => c.status === 'contacted' || c.status === 'outreach').forEach(c => {
+    const logs = emailLogs.filter(l => l.brand === c.brand);
+    if (logs.length > 0) {
+      const lastDate = new Date(logs[0].date);
+      const daysSince = Math.ceil((today - lastDate) / 86400000);
+      if (daysSince >= 5) alerts.push({ type: 'info', icon: '📧', text: `${c.brand} — ${daysSince}일 전 이메일 발송, 팔로업 필요`, brand: c.brand });
+    }
+  });
+
+  // No-email outreach contacts
+  const noEmailCount = S.contacts.filter(c => c.status === 'outreach' && !emailLogs.find(l => l.brand === c.brand)).length;
+
+  // Stats
+  const thisMonthDeals = S.deals.filter(d => d.deadline && d.deadline.startsWith(today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0')));
+  const totalRevenue = S.deals.filter(d => d.status === 'confirmed' || d.status === 'completed').reduce((s,d) => s + (parseFloat(d.value)||0), 0);
+  const thisWeekPosts = S.posts.filter(p => {
+    const pd = new Date(p.date);
+    const diff = Math.ceil((pd - today) / 86400000);
+    return diff >= 0 && diff < 7;
+  });
+  const activeDealCount = S.deals.filter(d => d.status !== 'completed').length;
+
+  // Timeline (recent activity)
+  const timeline = [];
+  S.posts.filter(p => { const d = new Date(p.date); return Math.abs((d-today)/86400000) < 14; })
+    .forEach(p => timeline.push({ date: p.date, text: `📅 ${p.title} (${ACCOUNTS[p.account]})`, type: 'post' }));
+  emailLogs.slice(0, 8).forEach(l => timeline.push({ date: l.date, text: `📧 ${l.brand} — ${getEmailLogLabel(l.type)}`, type: 'email' }));
+  S.deals.slice(-5).forEach(d => timeline.push({ date: d.deadline || todayStr, text: `💰 ${d.brand} — ₩${formatNum(d.value)}`, type: 'deal' }));
+  timeline.sort((a, b) => b.date.localeCompare(a.date));
+
+  // Weekly template
+  const dayNames = ['일','월','화','수','목','금','토'];
+  const weeklyHTML = S.weeklyTemplates.map((wt, i) =>
+    `<div class="weekly-row">
+      <div class="weekly-day">${dayNames[wt.day]}</div>
+      <div style="flex:1">${esc(wt.title)}</div>
+      <div style="font-size:10px;color:var(--text3)">${ACCOUNTS[wt.account]}</div>
+      <button class="btn btn-outline btn-sm" style="padding:2px 8px;font-size:10px" onclick="removeWeekly(${i})">✕</button>
+    </div>`
+  ).join('') || '<div style="font-size:12px;color:var(--text3)">템플릿이 없습니다</div>';
+
+  return `
+    <div class="section-header">
+      <div><div class="section-title">대시보드</div><div class="section-sub">${today.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' })}</div></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid-3" style="margin-bottom:16px;grid-template-columns:repeat(5,1fr)">
+      <div class="card dash-stat"><div class="dash-stat-num">${thisWeekPosts.length}</div><div class="dash-stat-label">이번 주 포스트</div></div>
+      <div class="card dash-stat"><div class="dash-stat-num">${activeDealCount}</div><div class="dash-stat-label">진행 중 딜</div></div>
+      <div class="card dash-stat"><div class="dash-stat-num" style="color:var(--success)">₩${formatNum(totalRevenue)}</div><div class="dash-stat-label">확정 수익</div></div>
+      <div class="card dash-stat"><div class="dash-stat-num">${emailLogs.length}</div><div class="dash-stat-label">발송 이메일</div></div>
+      <div class="card dash-stat"><div class="dash-stat-num">${S.contacts.length}</div><div class="dash-stat-label">CRM 브랜드</div></div>
+    </div>
+
+    <div class="dash-grid">
+      <!-- Left column -->
+      <div>
+        <!-- Alerts -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">알림 & 리마인더</div><span class="badge badge-gold">${alerts.length}</span></div>
+          ${alerts.length ? alerts.map(a => `<div class="dash-alert ${a.type}"><span class="alert-icon">${a.icon}</span><span>${esc(a.text)}</span></div>`).join('') : '<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">모든 일정이 정리되어 있습니다 ✦</div>'}
+          ${noEmailCount > 0 ? `<div class="dash-alert info"><span class="alert-icon">📬</span><span>아직 연락 안 한 브랜드 ${noEmailCount}개 — <a href="#" onclick="S.crmFilter='all';switchTab('crm');return false" style="color:var(--gold)">CRM 열기</a></span></div>` : ''}
+        </div>
+
+        <!-- This week posts -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">이번 주 콘텐츠</div></div>
+          ${thisWeekPosts.length ? thisWeekPosts.map(p => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)"><span style="color:var(--text3);min-width:70px">${p.date.slice(5)}</span><span class="cal-event acct-${p.account}" style="margin:0;flex:1">${esc(p.title)}</span></div>`).join('') : '<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">이번 주 예정된 포스트가 없습니다</div>'}
+        </div>
+
+        <!-- Weekly template -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">주간 루틴 템플릿</div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-sm" onclick="openWeeklyModal()">수정</button>
+              <button class="btn btn-gold btn-sm" onclick="autoFillWeek()">이번 주 자동 채우기</button>
+            </div>
+          </div>
+          ${weeklyHTML}
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div>
+        <!-- Price calculator -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">단가 계산기</div><button class="btn btn-outline btn-sm" onclick="openRateModal()">단가 설정</button></div>
+          <div id="priceCalcArea">
+            <div class="price-calc">
+              <label>피드 포스팅</label><input type="number" id="pc-feed" value="0" min="0" onchange="calcPrice()"><div class="rate-val" id="pv-feed">₩0</div>
+              <label>릴스</label><input type="number" id="pc-reels" value="0" min="0" onchange="calcPrice()"><div class="rate-val" id="pv-reels">₩0</div>
+              <label>스토리</label><input type="number" id="pc-story" value="0" min="0" onchange="calcPrice()"><div class="rate-val" id="pv-story">₩0</div>
+              <label>유튜브</label><input type="number" id="pc-youtube" value="0" min="0" onchange="calcPrice()"><div class="rate-val" id="pv-youtube">₩0</div>
+              <label>쇼츠</label><input type="number" id="pc-shorts" value="0" min="0" onchange="calcPrice()"><div class="rate-val" id="pv-shorts">₩0</div>
+              <label>블로그</label><input type="number" id="pc-blog" value="0" min="0" onchange="calcPrice()"><div class="rate-val" id="pv-blog">₩0</div>
+            </div>
+            <div class="gold-line"></div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700">
+              <span>합계</span><span style="color:var(--gold)" id="pc-total">₩0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">최근 활동</div></div>
+          <div class="dash-timeline">
+            ${timeline.slice(0, 10).map(t => `<div class="dash-tl-item"><div class="tl-date">${t.date.slice(5)}</div>${esc(t.text)}</div>`).join('')}
+            ${!timeline.length ? '<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">아직 활동이 없습니다</div>' : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function calcPrice() {
+  const types = ['feed','reels','story','youtube','shorts','blog'];
+  let total = 0;
+  types.forEach(t => {
+    const qty = parseInt(document.getElementById('pc-' + t)?.value) || 0;
+    const val = qty * S.priceRates[t];
+    total += val;
+    const el = document.getElementById('pv-' + t);
+    if (el) el.textContent = '₩' + formatNum(val);
+  });
+  const el = document.getElementById('pc-total');
+  if (el) el.textContent = '₩' + formatNum(total);
+}
+
+function openRateModal() {
+  showModal(`
+    <div class="modal-title">단가 설정 (건당)</div>
+    <div class="form-group"><label>피드 포스팅</label><input type="number" id="rate-feed" value="${S.priceRates.feed}"></div>
+    <div class="form-group"><label>릴스</label><input type="number" id="rate-reels" value="${S.priceRates.reels}"></div>
+    <div class="form-group"><label>스토리</label><input type="number" id="rate-story" value="${S.priceRates.story}"></div>
+    <div class="form-group"><label>유튜브</label><input type="number" id="rate-youtube" value="${S.priceRates.youtube}"></div>
+    <div class="form-group"><label>쇼츠</label><input type="number" id="rate-shorts" value="${S.priceRates.shorts}"></div>
+    <div class="form-group"><label>블로그</label><input type="number" id="rate-blog" value="${S.priceRates.blog}"></div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">취소</button><button class="btn btn-gold" onclick="saveRates()">저장</button></div>
+  `);
+}
+
+function saveRates() {
+  ['feed','reels','story','youtube','shorts','blog'].forEach(t => {
+    S.priceRates[t] = parseInt(document.getElementById('rate-' + t).value) || 0;
+  });
+  save('rates', S.priceRates);
+  closeModal(); renderMain();
+}
+
+// Weekly auto-fill
+function autoFillWeek() {
+  const today = new Date();
+  const dow = today.getDay();
+  let added = 0;
+  S.weeklyTemplates.forEach(wt => {
+    let diff = wt.day - dow;
+    if (diff < 0) diff += 7;
+    const d = new Date(today);
+    d.setDate(today.getDate() + diff);
+    const dateStr = fmt(d);
+    const exists = S.posts.find(p => p.date === dateStr && p.title === wt.title);
+    if (!exists) {
+      S.posts.push({ id: 'p' + Date.now() + added, date: dateStr, account: wt.account, title: wt.title, note: '주간 루틴 자동 생성' });
+      added++;
+    }
+  });
+  save('posts', S.posts);
+  showModal(`<div class="modal-title">주간 자동 채우기</div><p style="color:var(--text2);font-size:13px">${added}개의 포스트가 이번 주 캘린더에 추가되었습니다.</p><div class="modal-actions"><button class="btn btn-gold" onclick="closeModal()">확인</button></div>`);
+}
+
+function openWeeklyModal() {
+  const dayNames = ['일','월','화','수','목','금','토'];
+  const rows = S.weeklyTemplates.map((wt, i) =>
+    `<div class="form-row" style="margin-bottom:8px;align-items:center">
+      <div class="form-group" style="margin:0;flex:0 0 60px"><select id="wk-day-${i}" style="padding:4px">${dayNames.map((d,di) => `<option value="${di}" ${wt.day===di?'selected':''}>${d}</option>`).join('')}</select></div>
+      <div class="form-group" style="margin:0;flex:1"><input id="wk-title-${i}" value="${esc(wt.title)}"></div>
+      <div class="form-group" style="margin:0;flex:0 0 120px"><select id="wk-acct-${i}" style="padding:4px">${ACCOUNTS.map((a,ai) => `<option value="${ai}" ${wt.account===ai?'selected':''}>${a}</option>`).join('')}</select></div>
+    </div>`
+  ).join('');
+  showModal(`
+    <div class="modal-title">주간 루틴 템플릿 설정</div>
+    <div id="weekly-rows">${rows}</div>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addWeeklyRow()">+ 추가</button>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">취소</button><button class="btn btn-gold" onclick="saveWeekly()">저장</button></div>
+  `);
+}
+
+function addWeeklyRow() {
+  S.weeklyTemplates.push({ day: 0, title: '', account: 0 });
+  openWeeklyModal();
+}
+
+function removeWeekly(i) {
+  S.weeklyTemplates.splice(i, 1);
+  save('weekly', S.weeklyTemplates);
+  renderMain();
+}
+
+function saveWeekly() {
+  S.weeklyTemplates = [];
+  let i = 0;
+  while (document.getElementById('wk-day-' + i)) {
+    const title = document.getElementById('wk-title-' + i).value.trim();
+    if (title) {
+      S.weeklyTemplates.push({
+        day: parseInt(document.getElementById('wk-day-' + i).value),
+        title,
+        account: parseInt(document.getElementById('wk-acct-' + i).value),
+      });
+    }
+    i++;
+  }
+  save('weekly', S.weeklyTemplates);
+  closeModal();
+  renderMain();
+}
+
+// ─── Cross-tab automation helpers ───
+function autoCrmFromDeal(deal) {
+  const exists = S.contacts.find(c => c.brand.toLowerCase() === deal.brand.toLowerCase());
+  if (!exists) {
+    S.contacts.push({
+      id: 'c' + Date.now(),
+      brand: deal.brand,
+      contact: '',
+      platform: '',
+      category: 'other',
+      status: 'negotiating',
+      notes: '💰 브랜드 딜에서 자동 등록',
+    });
+    save('contacts', S.contacts);
+  } else if (exists.status === 'outreach' || exists.status === 'contacted') {
+    exists.status = 'negotiating';
+    save('contacts', S.contacts);
+  }
+}
+
+function autoCalendarFromDeal(deal) {
+  if (!deal.deadline) return;
+  const exists = S.posts.find(p => p.date === deal.deadline && p.title.includes(deal.brand));
+  if (!exists) {
+    S.posts.push({
+      id: 'p' + Date.now(),
+      date: deal.deadline,
+      account: 0,
+      title: `[딜 마감] ${deal.brand}`,
+      note: `금액: ₩${formatNum(deal.value)}\n상태: ${deal.status}`,
+    });
+    save('posts', S.posts);
+  }
+}
+
+function autoThumbFromScript(script) {
+  S.thumb.scriptText = script.topic.split(/\s+/).find(w => /[a-zA-Z]/.test(w)) || script.topic.substring(0, 12);
+  S.thumb.capsText = script.type.toUpperCase().replace(/[/\s]/g, ' ').trim();
+  S.thumb.krText = script.topic;
+}
+
+function autoCrmStatusOnEmail(brand) {
+  const c = S.contacts.find(x => x.brand === brand);
+  if (c && c.status === 'outreach') {
+    c.status = 'contacted';
+    save('contacts', S.contacts);
+  }
+}
+
+// ─── Calendar ───
 function renderCalendar() {
   const d = S.calDate;
   const y = d.getFullYear(), mo = d.getMonth();
@@ -1075,8 +1396,10 @@ function createDealFromParsed(alsoCRM) {
   };
   S.deals.push(deal);
   save('deals', S.deals);
+  autoCalendarFromDeal(deal);
+  autoCrmFromDeal(deal);
 
-  // Optionally add to CRM
+  // Optionally add to CRM with more detail
   if (alsoCRM) {
     const existing = S.contacts.find(c => c.brand.toLowerCase().includes(brand.toLowerCase()));
     if (!existing) {
@@ -1164,7 +1487,10 @@ function saveDeal() {
     briefName: window._dealFiles?.briefName || '',
   };
   if (!deal.brand) return;
-  S.deals.push(deal); save('deals', S.deals); closeModal(); renderMain();
+  S.deals.push(deal); save('deals', S.deals);
+  autoCrmFromDeal(deal);
+  autoCalendarFromDeal(deal);
+  closeModal(); renderMain();
 }
 
 function editDeal(id) { openDealModal(S.deals.find(d => d.id === id)); }
@@ -1355,6 +1681,7 @@ function saveScript() {
   if (window._pendingScript) {
     S.scripts.unshift(window._pendingScript);
     save('scripts', S.scripts);
+    autoThumbFromScript(window._pendingScript);
     window._pendingScript = null;
     window._scriptScreenshots = [];
     renderMain();
@@ -1429,6 +1756,7 @@ function logEmail(brand, type) {
   logs.unshift({ brand, type, date: fmt(new Date()), time: new Date().toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'}) });
   if (logs.length > 200) logs.length = 200;
   localStorage.setItem('ihq_email_logs', JSON.stringify(logs));
+  autoCrmStatusOnEmail(brand);
 }
 
 function getEmailLogs(brand) {
@@ -1478,10 +1806,13 @@ function renderCRM() {
     return `
     <div class="crm-card">
       <div style="display:flex;justify-content:space-between;align-items:start">
-        <div>
-          ${c.category ? `<div class="crm-category">${categoryLabels[c.category] || c.category}</div>` : ''}
-          <h3>${esc(c.brand)}</h3>
-          <div class="crm-contact">${esc(c.contact || '연락처 없음')}</div>
+        <div style="display:flex;align-items:start;gap:8px">
+          <input type="checkbox" class="batch-check" data-brand="${esc(c.brand)}" data-email="${esc(c.contact||'')}" ${S.crmSelected.includes(c.id)?'checked':''} onchange="toggleCrmSelect('${c.id}')">
+          <div>
+            ${c.category ? `<div class="crm-category">${categoryLabels[c.category] || c.category}</div>` : ''}
+            <h3>${esc(c.brand)}</h3>
+            <div class="crm-contact">${esc(c.contact || '연락처 없음')}</div>
+          </div>
         </div>
         <span class="badge ${statusBadge[c.status]||'badge-neutral'}">${statusGroups[c.status]||c.status}</span>
       </div>
@@ -1506,6 +1837,11 @@ function renderCRM() {
       </div>
     </div>
     ${renderGmailBar()}
+    ${S.crmSelected.length ? `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gold-glow);border:1px solid var(--gold-dim);border-radius:8px;margin-bottom:12px">
+      <span style="font-size:12px;color:var(--gold);font-weight:600">${S.crmSelected.length}개 선택됨</span>
+      <button class="btn btn-gold btn-sm" onclick="batchOutreach()">📧 일괄 아웃리치</button>
+      <button class="btn btn-outline btn-sm" onclick="S.crmSelected=[];renderMain()">선택 해제</button>
+    </div>` : ''}
     ${filters}
     ${cards}`;
 }
@@ -1581,6 +1917,61 @@ function updateContact(id) {
 }
 
 function deleteContact(id) { S.contacts = S.contacts.filter(c => c.id !== id); save('contacts', S.contacts); renderMain(); }
+
+function toggleCrmSelect(id) {
+  const idx = S.crmSelected.indexOf(id);
+  if (idx >= 0) S.crmSelected.splice(idx, 1);
+  else S.crmSelected.push(id);
+  renderMain();
+}
+
+function batchOutreach() {
+  const selected = S.crmSelected.map(id => S.contacts.find(c => c.id === id)).filter(Boolean);
+  if (!selected.length) return;
+
+  const tplKeys = ['outreach_kr', 'outreach_en'];
+  const tplButtons = tplKeys.map(k => {
+    const tpl = EMAIL_TEMPLATES[k];
+    return `<button class="btn btn-outline btn-sm" style="text-align:left;padding:10px 14px;width:100%" onclick="executeBatchOutreach('${k}')">
+      <div style="font-weight:600;margin-bottom:2px">${tpl.name}</div>
+      <div style="font-size:10px;color:var(--text3)">${selected.length}개 브랜드에 각각 브랜드명 자동 치환하여 발송</div>
+    </button>`;
+  }).join('');
+
+  const brandList = selected.map(c =>
+    `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border)">
+      <span style="flex:1;font-weight:600">${esc(c.brand)}</span>
+      <span style="color:var(--text3)">${esc(c.contact || '이메일 없음')}</span>
+    </div>`
+  ).join('');
+
+  showModal(`
+    <div class="modal-title">📧 일괄 아웃리치 (${selected.length}개 브랜드)</div>
+    <div class="gmail-bar"><span class="gmail-icon">📧</span><span>From:</span><span class="gmail-email">${GMAIL}</span></div>
+    <div style="max-height:150px;overflow-y:auto;margin:12px 0;padding:8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">${brandList}</div>
+    <div style="font-size:11px;color:var(--text3);letter-spacing:1px;margin-bottom:10px">템플릿 선택 (각 브랜드명 자동 치환)</div>
+    <div style="display:flex;flex-direction:column;gap:6px">${tplButtons}</div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">취소</button></div>
+  `);
+}
+
+function executeBatchOutreach(tplKey) {
+  const selected = S.crmSelected.map(id => S.contacts.find(c => c.id === id)).filter(Boolean);
+  closeModal();
+
+  let opened = 0;
+  selected.forEach((c, i) => {
+    setTimeout(() => {
+      openGmailTemplate(tplKey, c.brand, c.contact || '');
+      logEmail(c.brand, tplKey);
+      opened++;
+      if (opened === selected.length) {
+        S.crmSelected = [];
+        showModal(`<div class="modal-title">일괄 발송 완료</div><p style="color:var(--text2);font-size:13px">${selected.length}개 브랜드에 Gmail 창이 열렸습니다.<br>각 창에서 내용 확인 후 발송해주세요.</p><div class="modal-actions"><button class="btn btn-gold" onclick="closeModal();renderMain()">확인</button></div>`);
+      }
+    }, i * 800); // Stagger to avoid popup blocking
+  });
+}
 
 // ─── Thumbnail Maker ───
 // Font loading for Pinyon Script (Google Fonts loaded via <link>)
