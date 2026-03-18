@@ -1,0 +1,2086 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Influencer HQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--surface:#111;--surface2:#1a1a1a;--surface3:#222;--border:#2a2a2a;--gold:#c4a265;--gold-dim:#8a7345;--gold-glow:rgba(196,162,101,.12);--text:#e8e8e8;--text2:#999;--text3:#666;--white:#fff;--danger:#c44;--success:#4a7;--warn:#ca4}
+html,body{height:100%;font-family:'SF Pro Display',-apple-system,'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:var(--text)}
+input,textarea,select{font-family:inherit;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 12px;outline:none;transition:border .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--gold)}
+textarea{resize:vertical}
+select option{background:var(--surface2)}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.app{display:flex;flex-direction:column;height:100vh}
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.logo{font-size:18px;font-weight:700;letter-spacing:2px;color:var(--white)}
+.logo span{color:var(--gold)}
+.header-right{font-size:12px;color:var(--text3);letter-spacing:1px}
+
+.nav{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;overflow-x:auto}
+.nav-btn{padding:12px 20px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);transition:all .2s;border-bottom:2px solid transparent;white-space:nowrap}
+.nav-btn:hover{color:var(--text2)}
+.nav-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+.main{flex:1;overflow-y:auto;padding:24px 28px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.btn{padding:8px 18px;border-radius:6px;font-size:12px;letter-spacing:1px;transition:all .2s}
+.btn-gold{background:var(--gold);color:#000;font-weight:600}
+.btn-gold:hover{background:#d4b275}
+.btn-outline{border:1px solid var(--border);color:var(--text2)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-sm{padding:5px 12px;font-size:11px}
+.btn-danger{border:1px solid var(--danger);color:var(--danger)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;letter-spacing:.5px;font-weight:600;text-transform:uppercase}
+.badge-gold{background:var(--gold-glow);color:var(--gold);border:1px solid var(--gold-dim)}
+.badge-success{background:rgba(68,170,119,.12);color:var(--success);border:1px solid rgba(68,170,119,.3)}
+.badge-warn{background:rgba(204,170,68,.12);color:var(--warn);border:1px solid rgba(204,170,68,.3)}
+.badge-danger{background:rgba(204,68,68,.12);color:var(--danger);border:1px solid rgba(204,68,68,.3)}
+.badge-neutral{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.form-group input,.form-group textarea,.form-group select{width:100%}
+.form-row{display:flex;gap:12px}
+.form-row .form-group{flex:1}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+.empty{text-align:center;padding:48px 20px;color:var(--text3);font-size:13px;letter-spacing:1px}
+.empty-icon{font-size:32px;margin-bottom:12px;opacity:.5}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:90%;max-width:560px;max-height:85vh;overflow-y:auto}
+.modal-title{font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px;color:var(--gold)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+.tag{display:inline-block;padding:2px 8px;margin:2px;border-radius:4px;font-size:11px;background:var(--surface3);color:var(--text2)}
+
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.section-title{font-size:16px;font-weight:600;letter-spacing:1px}
+.section-sub{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+
+/* Calendar */
+.cal-controls{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.cal-controls .month-label{font-size:16px;font-weight:600;min-width:180px;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:8px;overflow:hidden}
+.cal-head{padding:10px 4px;text-align:center;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);background:var(--surface)}
+.cal-cell{min-height:90px;padding:6px;background:var(--surface);position:relative;cursor:pointer;transition:background .15s}
+.cal-cell:hover{background:var(--surface2)}
+.cal-cell.other{opacity:.3}
+.cal-cell.today{background:var(--gold-glow)}
+.cal-day{font-size:12px;font-weight:600;margin-bottom:4px}
+.cal-event{font-size:9px;padding:2px 5px;margin-bottom:2px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cal-event.acct-0{background:rgba(196,162,101,.2);color:var(--gold);border-left:2px solid var(--gold)}
+.cal-event.acct-1{background:rgba(150,180,220,.2);color:#96b4dc;border-left:2px solid #96b4dc}
+.week-view .cal-cell{min-height:140px}
+
+/* Carousel */
+.carousel-workspace{display:flex;gap:20px;height:calc(100vh - 180px)}
+.carousel-sidebar{width:200px;flex-shrink:0;overflow-y:auto}
+.slide-thumb{padding:10px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;cursor:pointer;transition:all .2s;font-size:11px;color:var(--text2)}
+.slide-thumb:hover,.slide-thumb.active{border-color:var(--gold);background:var(--gold-glow)}
+.slide-thumb .num{font-size:10px;color:var(--text3);margin-bottom:4px}
+.carousel-preview{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.slide-canvas{width:400px;height:500px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;position:relative;overflow:hidden;background-size:cover;background-position:center}
+.slide-canvas .slide-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px}
+.slide-canvas .slide-heading{font-size:22px;font-weight:700;text-align:center;margin-bottom:12px;color:var(--white);word-break:keep-all;position:relative;z-index:2}
+.slide-canvas .slide-body{font-size:14px;text-align:center;color:var(--text2);line-height:1.6;word-break:keep-all;position:relative;z-index:2}
+.slide-canvas .slide-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px}
+.slide-canvas .slide-media-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px}
+.slide-canvas .slide-num{position:absolute;bottom:12px;right:16px;font-size:10px;color:var(--text3);z-index:2}
+.carousel-editor{width:300px;flex-shrink:0;overflow-y:auto}
+
+/* Canva-style toolbar */
+.canva-toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;padding:8px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+.canva-toolbar button{padding:4px 10px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--surface3);color:var(--text2)}
+.canva-toolbar button:hover{border-color:var(--gold);color:var(--gold)}
+.canva-toolbar button.active{background:var(--gold);color:#000;border-color:var(--gold)}
+.font-select{background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:11px}
+
+/* File upload zone */
+.file-drop{border:2px dashed var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;font-size:12px;color:var(--text3)}
+.file-drop:hover{border-color:var(--gold);color:var(--gold)}
+.file-drop.has-file{border-color:var(--success);color:var(--success)}
+
+/* AI Caption */
+.ai-output{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;min-height:120px;white-space:pre-wrap;line-height:1.7;font-size:13px}
+.ai-output .hashtags{color:var(--gold);margin-top:8px;display:block}
+
+/* Deals */
+.deal-row{display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);gap:16px;flex-wrap:wrap}
+.deal-row:last-child{border-bottom:none}
+.deal-brand{font-weight:600;min-width:140px}
+.deal-value{color:var(--gold);font-weight:600;min-width:100px}
+.deal-deadline{color:var(--text2);font-size:12px;min-width:100px}
+.deal-actions{margin-left:auto;display:flex;gap:6px}
+.deal-files{display:flex;gap:6px;margin-top:4px;width:100%}
+.deal-file-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:4px;font-size:10px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);cursor:pointer}
+.deal-file-badge:hover{border-color:var(--gold);color:var(--gold)}
+
+/* Script */
+.script-block{border-left:3px solid var(--gold);padding:12px 16px;margin-bottom:12px;background:var(--surface2);border-radius:0 8px 8px 0}
+.script-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.script-text{font-size:13px;line-height:1.7;color:var(--text)}
+.screenshot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:10px}
+.screenshot-item{position:relative;border-radius:6px;overflow:hidden;border:1px solid var(--border);aspect-ratio:9/16;background:var(--surface2)}
+.screenshot-item img{width:100%;height:100%;object-fit:cover}
+.screenshot-item .remove-ss{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--border)}
+
+/* CRM */
+.crm-card{border:1px solid var(--border);border-radius:8px;padding:16px;background:var(--surface);transition:border .2s}
+.crm-card:hover{border-color:var(--gold-dim)}
+.crm-card h3{font-size:14px;font-weight:600;margin-bottom:6px}
+.crm-card .crm-contact{font-size:12px;color:var(--text2);margin-bottom:8px}
+.crm-card .crm-notes{font-size:12px;color:var(--text3);line-height:1.5;margin-top:8px;border-top:1px solid var(--border);padding-top:8px}
+.crm-card .crm-category{font-size:10px;color:var(--gold);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase}
+.crm-actions{display:flex;gap:6px;margin-top:10px}
+.crm-filter{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.crm-filter button{padding:4px 12px;font-size:11px;border:1px solid var(--border);border-radius:20px;color:var(--text3)}
+.crm-filter button:hover,.crm-filter button.active{border-color:var(--gold);color:var(--gold);background:var(--gold-glow)}
+
+/* Gmail integration */
+.gmail-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-size:12px}
+.gmail-bar .gmail-icon{font-size:16px}
+.gmail-bar .gmail-email{color:var(--gold);font-weight:600;letter-spacing:.5px}
+.gmail-bar .gmail-status{color:var(--success);font-size:10px;margin-left:auto;letter-spacing:1px}
+.btn-gmail{background:rgba(196,162,101,.12);border:1px solid var(--gold-dim);color:var(--gold);padding:4px 10px;border-radius:4px;font-size:10px;letter-spacing:.5px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:4px}
+.btn-gmail:hover{background:var(--gold);color:#000}
+.email-log{margin-top:8px;border-top:1px solid var(--border);padding-top:8px}
+.email-log-item{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text3);padding:3px 0}
+.email-log-item .log-date{color:var(--text2);min-width:70px}
+.email-log-item .log-type{padding:1px 6px;border-radius:3px;font-size:9px;letter-spacing:.5px}
+.email-log-item .log-sent{background:rgba(68,170,119,.15);color:var(--success)}
+.email-log-item .log-reply{background:rgba(196,162,101,.15);color:var(--gold)}
+.email-log-item .log-follow{background:rgba(204,170,68,.15);color:var(--warn)}
+.email-tpl-select{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.email-tpl-select button{padding:4px 10px;font-size:10px;border:1px solid var(--border);border-radius:4px;color:var(--text3);background:var(--surface2)}
+.email-tpl-select button:hover{border-color:var(--gold);color:var(--gold)}
+
+/* Email Parser */
+.email-import-zone{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .3s;margin-bottom:16px;position:relative}
+.email-import-zone:hover,.email-import-zone.drag-over{border-color:var(--gold);background:var(--gold-glow)}
+.email-import-zone .import-icon{font-size:28px;margin-bottom:8px;opacity:.6}
+.email-import-zone .import-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.email-import-zone .import-sub{font-size:11px;color:var(--text3)}
+.parsed-result{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px}
+.parsed-field{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.parsed-field:last-child{border-bottom:none}
+.parsed-label{min-width:80px;font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;padding-top:2px;flex-shrink:0}
+.parsed-value{color:var(--text);line-height:1.5;flex:1}
+.parsed-value.editable{background:var(--surface3);border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:text}
+.parsed-tag{display:inline-block;padding:2px 8px;margin:2px;border-radius:4px;font-size:10px;background:var(--gold-glow);color:var(--gold);border:1px solid var(--gold-dim)}
+
+.hidden{display:none!important}
+.gold-line{height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);margin:20px 0}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.tab-content{animation:fadeIn .25s ease}
+
+/* Thumbnail Maker */
+.thumb-workspace{display:flex;gap:20px;height:calc(100vh - 180px)}
+.thumb-preview{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.thumb-canvas-wrap{position:relative;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.thumb-canvas{display:block;touch-action:none;user-select:none}
+.thumb-editor{width:320px;flex-shrink:0;overflow-y:auto;padding-right:4px}
+.thumb-templates{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.thumb-tpl{aspect-ratio:16/9;border:2px solid var(--border);border-radius:6px;cursor:pointer;overflow:hidden;position:relative;transition:all .2s;display:flex;align-items:center;justify-content:center;padding:6px;font-size:8px;text-align:center;color:var(--text3);background:var(--surface2)}
+.thumb-tpl:hover,.thumb-tpl.active{border-color:var(--gold);box-shadow:0 0 12px var(--gold-glow)}
+.thumb-tpl-label{position:absolute;bottom:2px;left:0;right:0;font-size:7px;text-align:center;color:var(--text3)}
+.thumb-saved-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
+.thumb-saved-item{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:border .2s}
+.thumb-saved-item:hover{border-color:var(--gold)}
+.thumb-saved-item img{width:100%;display:block}
+.thumb-saved-item .thumb-saved-del{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.8);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--border)}
+.thumb-saved-item .thumb-saved-name{position:absolute;bottom:0;left:0;right:0;padding:4px 8px;background:rgba(0,0,0,.7);font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.color-swatches{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.color-swatch{width:24px;height:24px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:border .15s}
+.color-swatch:hover,.color-swatch.active{border-color:var(--white)}
+.thumb-layer-list{margin-top:10px}
+.thumb-layer{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;margin-bottom:4px;font-size:11px;color:var(--text2);background:var(--surface2)}
+.thumb-layer .layer-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thumb-layer button{font-size:10px;color:var(--text3);padding:2px 6px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="logo">INFLUENCER <span>HQ</span></div>
+    <div class="header-right">SEOUL &middot; @krystalha_ &middot; @_from.krystal</div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+// ─── State ───
+const S = {
+  tab: 'calendar',
+  calView: 'month',
+  calDate: new Date(),
+  posts: JSON.parse(localStorage.getItem('ihq_posts') || '[]'),
+  slides: JSON.parse(localStorage.getItem('ihq_slides') || '[]'),
+  activeSlide: 0,
+  deals: JSON.parse(localStorage.getItem('ihq_deals') || '[]'),
+  contacts: JSON.parse(localStorage.getItem('ihq_contacts') || '[]'),
+  scripts: JSON.parse(localStorage.getItem('ihq_scripts') || '[]'),
+  crmFilter: 'all',
+  thumbs: JSON.parse(localStorage.getItem('ihq_thumbs') || '[]'),
+  thumb: {
+    size: 'igstory',
+    bg: '#1a1a1a',
+    bgImage: null,
+    overlay: 0.15,
+    gradientStrength: 0.7,
+    scriptText: 'Tips from',
+    capsText: 'NEW YORK',
+    krText: '뉴욕 예술경영에서 배운 현명한 소비 법',
+    titleColor: '#ffffff',
+    capsColor: '#ffffff',
+    krColor: '#ffffff',
+    scriptSize: 72,
+    capsSize: 18,
+    krSize: 24,
+    textY: 55,
+    titleStroke: false,
+    titleStrokeColor: 'rgba(0,0,0,0.5)',
+    badge: '',
+    badgeColor: '#c4a265',
+    badgeBg: '#000000',
+    template: 'krystal',
+    accentColor: '#ffffff',
+  },
+};
+const ACCOUNTS = ['@krystalha_', '@_from.krystal'];
+const GMAIL = 'from.krystalha@gmail.com';
+
+const EMAIL_TEMPLATES = {
+  outreach_kr: {
+    name: '첫 아웃리치 (한국어)',
+    subject: '[협업 제안] 인플루언서 크리스탈 x {{brand}} 콜라보레이션',
+    body: `안녕하세요, {{brand}} 담당자님.\n\n아트 큐레이터이자 라이프스타일 크리에이터 크리스탈(@krystalha_ / @_from.krystal)입니다.\n\n{{brand}}의 브랜드 철학과 감성에 깊은 인상을 받아 협업을 제안드리고자 연락드립니다.\n\n[크리에이터 프로필]\n• Instagram: @krystalha_ (아트/큐레이션), @_from.krystal (라이프스타일)\n• 서울 기반 아트 큐레이터 & 라이프스타일 인플루언서\n• 주요 콘텐츠: 전시 리뷰, 공간 큐레이션, 뷰티/패션 라이프스타일\n\n{{brand}}와 함께할 수 있는 콘텐츠 방향에 대해 논의할 수 있는 기회가 있다면 감사하겠습니다.\n\n편하신 시간에 미팅 또는 통화 가능합니다.\n\n감사합니다.\n크리스탈 드림`
+  },
+  outreach_en: {
+    name: '첫 아웃리치 (영어)',
+    subject: '[Collaboration Proposal] Krystal x {{brand}}',
+    body: `Dear {{brand}} Team,\n\nI'm Krystal, a Seoul-based art curator and lifestyle content creator.\n\nI'd love to explore a potential collaboration with {{brand}}. Your brand's aesthetic and values resonate deeply with my content direction.\n\n[Creator Profile]\n• Instagram: @krystalha_ (art/curation), @_from.krystal (lifestyle)\n• Seoul-based art curator & lifestyle influencer\n• Content focus: exhibition reviews, space curation, beauty/fashion lifestyle\n\nI'd be happy to share my media kit and discuss content ideas that align with {{brand}}'s vision.\n\nLooking forward to hearing from you.\n\nBest regards,\nKrystal`
+  },
+  followup: {
+    name: '팔로업',
+    subject: 'Re: [협업 제안] 크리스탈 x {{brand}}',
+    body: `안녕하세요, {{brand}} 담당자님.\n\n지난번 보내드린 협업 제안 관련하여 팔로업 드립니다.\n\n혹시 검토해보실 기회가 있으셨을지 궁금합니다. 추가 자료나 미디어킷이 필요하시다면 말씀해 주세요.\n\n감사합니다.\n크리스탈 드림`
+  },
+  deal_confirm: {
+    name: '딜 확정 확인',
+    subject: '[확인] {{brand}} x 크리스탈 협업 계약 확인',
+    body: `안녕하세요, {{brand}} 담당자님.\n\n협업 계약 관련 확인 메일 드립니다.\n\n[협업 내용 확인]\n• 브랜드: {{brand}}\n• 콘텐츠 형태: (기입)\n• 일정: (기입)\n• 금액: (기입)\n\n계약서 및 소구점 자료 확인 부탁드립니다.\n첨부 파일 확인 후 진행 부탁드리겠습니다.\n\n감사합니다.\n크리스탈 드림`
+  },
+  deal_delivery: {
+    name: '콘텐츠 납품',
+    subject: '[납품] {{brand}} x 크리스탈 콘텐츠 전달',
+    body: `안녕하세요, {{brand}} 담당자님.\n\n요청하신 콘텐츠 제작이 완료되어 전달드립니다.\n\n[납품 내용]\n• 콘텐츠 형태: (기입)\n• 업로드 예정일: (기입)\n• 첨부: (링크 또는 파일)\n\n검토 후 피드백 부탁드립니다.\n수정 사항 있으시면 말씀해 주세요.\n\n감사합니다.\n크리스탈 드림`
+  },
+};
+const DAYS_KR = ['일','월','화','수','목','금','토'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function save(key, data) { localStorage.setItem('ihq_' + key, JSON.stringify(data)); }
+
+// ─── Pre-loaded Korean brand database ───
+const BRAND_DB = [
+  // Beauty
+  { brand: 'Sulwhasoo 설화수', contact: 'creator@sulwhasoo.com', platform: 'Instagram, YouTube', category: 'beauty', status: 'outreach', notes: '프리미엄 한방 스킨케어. 아트 콜라보 진행 이력 있음' },
+  { brand: 'Hera 헤라', contact: 'influencer@hera.com', platform: 'Instagram', category: 'beauty', status: 'outreach', notes: '서울 패션위크 공식 뷰티 파트너' },
+  { brand: 'Laneige 라네즈', contact: 'partnership@laneige.com', platform: 'Instagram, TikTok', category: 'beauty', status: 'outreach', notes: '글로벌 캠페인 활발. 립 슬리핑 마스크 주력' },
+  { brand: 'Amorepacific 아모레퍼시픽', contact: 'creators@amorepacific.com', platform: 'YouTube, Instagram', category: 'beauty', status: 'outreach', notes: '그룹 차원 크리에이터 프로그램 운영' },
+  { brand: 'Innisfree 이니스프리', contact: 'collab@innisfree.com', platform: 'Instagram, YouTube', category: 'beauty', status: 'outreach', notes: '제주 자연주의 컨셉. 지속가능성 캠페인' },
+  { brand: 'Dr.Jart+ 닥터자르트', contact: 'pr@drjart.com', platform: 'Instagram', category: 'beauty', status: 'outreach', notes: '더모코스메틱 리더. 시카페어 시리즈' },
+  { brand: 'Gentle Monster 젠틀몬스터', contact: 'pr@gentlemonster.com', platform: 'Instagram', category: 'beauty', status: 'outreach', notes: '아이웨어 + 뷰티(탬버린즈). 아트 콜라보 적극적' },
+  { brand: 'Tamburins 탬버린즈', contact: 'creators@tamburins.com', platform: 'Instagram', category: 'beauty', status: 'outreach', notes: '니치 퍼퓸 & 핸드크림. 감각적 비주얼 중시' },
+  { brand: 'Nonfiction 논픽션', contact: 'press@nonfiction.kr', platform: 'Instagram', category: 'beauty', status: 'outreach', notes: '프리미엄 바디/홈케어. 성수동 플래그십' },
+  { brand: 'Banila Co 바닐라코', contact: 'influencer@banilaco.com', platform: 'Instagram, TikTok', category: 'beauty', status: 'outreach', notes: '클렌징 밤 글로벌 히트' },
+
+  // Fashion
+  { brand: 'MARDI MERCREDI 마르디 메크르디', contact: 'pr@mardimercredi.com', platform: 'Instagram', category: 'fashion', status: 'outreach', notes: '캐주얼 럭셔리. 플라워 로고 아이코닉' },
+  { brand: 'ANDERSSON BELL 앤더슨벨', contact: 'collab@anderssonbell.com', platform: 'Instagram, YouTube', category: 'fashion', status: 'outreach', notes: '서울 기반 컨템포러리. 글로벌 리테일 입점' },
+  { brand: 'ADER ERROR 아더에러', contact: 'pr@adererror.com', platform: 'Instagram', category: 'fashion', status: 'outreach', notes: '아트 & 패션 크로스오버. 젠더리스' },
+  { brand: 'WOOYOUNGMI 우영미', contact: 'press@wooyoungmi.com', platform: 'Instagram', category: 'fashion', status: 'outreach', notes: '파리 패션위크 정규 컬렉션. 프리미엄 맨즈웨어' },
+  { brand: 'LOW CLASSIC 로우클래식', contact: 'pr@lowclassic.com', platform: 'Instagram', category: 'fashion', status: 'outreach', notes: '미니멀 여성복. 구조적 실루엣' },
+  { brand: 'KUHO 구호', contact: 'pr@kuho.co.kr', platform: 'Instagram', category: 'fashion', status: 'outreach', notes: '삼성물산 패션. 프리미엄 여성 컨템포러리' },
+  { brand: 'JUUN.J 준지', contact: 'press@juunj.com', platform: 'Instagram', category: 'fashion', status: 'outreach', notes: '아방가르드 스트리트. 파리 컬렉션' },
+  { brand: 'TheOpen Product 디오픈프로덕트', contact: 'collab@theopenproduct.com', platform: 'Instagram', category: 'fashion', status: 'outreach', notes: '트렌디 유니섹스. MZ세대 인기' },
+  { brand: 'INSTANTFUNK 인스턴트펑크', contact: 'pr@instantfunk.co.kr', platform: 'Instagram', category: 'fashion', status: 'outreach', notes: '스트리트 캐주얼. 셀럽 착용 다수' },
+  { brand: 'EENK 잉크', contact: 'press@eenk.com', platform: 'Instagram', category: 'fashion', status: 'outreach', notes: '여성스러운 컨템포러리. 서울 패션위크 참가' },
+
+  // Interior & Furniture
+  { brand: 'Fritz Hansen Korea 프리츠한센 코리아', contact: 'kr@fritzhansen.com', platform: 'Instagram', category: 'interior', status: 'outreach', notes: '덴마크 프리미엄 가구. 청담 쇼룸' },
+  { brand: 'B&B Italia Korea 비앤비이탈리아', contact: 'korea@bebitalia.com', platform: 'Instagram', category: 'interior', status: 'outreach', notes: '이탈리안 럭셔리 가구. 논현동 쇼룸' },
+  { brand: 'Ligne Roset Seoul 리네로제 서울', contact: 'seoul@ligne-roset.com', platform: 'Instagram', category: 'interior', status: 'outreach', notes: '프랑스 컨템포러리 가구. 아트 콜라보' },
+  { brand: 'Vitra Korea 비트라 코리아', contact: 'info@vitra.kr', platform: 'Instagram', category: 'interior', status: 'outreach', notes: '스위스 디자인 가구. 한남동 플래그십' },
+  { brand: 'HAY Korea 헤이 코리아', contact: 'partner@hay.kr', platform: 'Instagram', category: 'interior', status: 'outreach', notes: '덴마크 모던 디자인. 성수동 쇼룸' },
+  { brand: 'CASAMIA 까사미아', contact: 'influencer@casamia.co.kr', platform: 'Instagram, YouTube', category: 'interior', status: 'outreach', notes: '국내 대표 프리미엄 가구. 리빙 토탈 브랜드' },
+  { brand: 'Daily Like 데일리라이크', contact: 'collab@dailylike.co.kr', platform: 'Instagram', category: 'interior', status: 'outreach', notes: '라이프스타일 소품 & 패브릭. 감성 인테리어' },
+  { brand: 'JAJU 자주', contact: 'creators@jaju.co.kr', platform: 'Instagram, YouTube', category: 'interior', status: 'outreach', notes: '신세계 라이프스타일 브랜드. 합리적 프리미엄' },
+  { brand: 'Chapter1 챕터원', contact: 'pr@chapter1.kr', platform: 'Instagram', category: 'interior', status: 'outreach', notes: '프리미엄 소파 전문. 이태원 쇼룸' },
+  { brand: 'TOUN28 통28', contact: 'collab@toun28.com', platform: 'Instagram', category: 'interior', status: 'outreach', notes: '제로웨이스트 라이프스타일. 인테리어 소품' },
+  { brand: 'Punkt. Korea 풍트 코리아', contact: 'kr@punkt.ch', platform: 'Instagram', category: 'interior', status: 'outreach', notes: '스위스 미니멀 디자인 전자기기 & 리빙' },
+  { brand: 'GRANHAND 그랑핸드', contact: 'pr@granhand.com', platform: 'Instagram', category: 'interior', status: 'outreach', notes: '프리미엄 핸드케어 & 홈 프래그런스. 공간 연출' },
+];
+
+// Initialize CRM with brand DB if empty
+function initBrandDB() {
+  if (S.contacts.length === 0) {
+    S.contacts = BRAND_DB.map((b, i) => ({ ...b, id: 'c' + (Date.now() + i) }));
+    save('contacts', S.contacts);
+  }
+}
+
+// ─── Tabs ───
+const TABS = [
+  { id: 'calendar', label: '캘린더 Calendar' },
+  { id: 'carousel', label: '캐러셀 Carousel' },
+  { id: 'caption', label: 'AI 캡션 Caption' },
+  { id: 'deals', label: '브랜드딜 Deals' },
+  { id: 'script', label: '스크립트 Script' },
+  { id: 'crm', label: 'CRM 아웃리치' },
+  { id: 'thumbnail', label: '썸네일 Thumbnail' },
+];
+
+function renderNav() {
+  document.getElementById('nav').innerHTML = TABS.map(t =>
+    `<button class="nav-btn ${S.tab === t.id ? 'active' : ''}" onclick="switchTab('${t.id}')">${t.label}</button>`
+  ).join('');
+}
+
+function switchTab(id) {
+  S.tab = id;
+  renderNav();
+  renderMain();
+}
+
+function renderMain() {
+  const m = document.getElementById('main');
+  const fn = { calendar: renderCalendar, carousel: renderCarousel, caption: renderCaption, deals: renderDeals, script: renderScript, crm: renderCRM, thumbnail: renderThumbnail };
+  m.innerHTML = `<div class="tab-content">${fn[S.tab]()}</div>`;
+  if (S.tab === 'carousel') initCarouselEvents();
+  if (S.tab === 'thumbnail') initThumbCanvas();
+}
+
+// ─── Calendar (unchanged) ───
+function renderCalendar() {
+  const d = S.calDate;
+  const y = d.getFullYear(), mo = d.getMonth();
+  const first = new Date(y, mo, 1);
+  const startDay = first.getDay();
+  const daysInMonth = new Date(y, mo + 1, 0).getDate();
+  const today = new Date();
+  const isWeek = S.calView === 'week';
+
+  let controls = `<div class="cal-controls">
+    <button class="btn btn-outline btn-sm" onclick="calNav(-1)">&larr; 이전</button>
+    <div class="month-label">${MONTHS[mo]} ${y}</div>
+    <button class="btn btn-outline btn-sm" onclick="calNav(1)">다음 &rarr;</button>
+    <button class="btn btn-outline btn-sm ${S.calView==='month'?'btn-gold':''}" onclick="S.calView='month';renderMain()">월간</button>
+    <button class="btn btn-outline btn-sm ${S.calView==='week'?'btn-gold':''}" onclick="S.calView='week';renderMain()">주간</button>
+    <button class="btn btn-gold btn-sm" onclick="openPostModal()">+ 포스트 추가</button>
+  </div>`;
+
+  let heads = DAYS_KR.map(d => `<div class="cal-head">${d}</div>`).join('');
+  let cells = '';
+  if (isWeek) {
+    const dow = today.getDay();
+    const weekStart = new Date(today); weekStart.setDate(today.getDate() - dow);
+    for (let i = 0; i < 7; i++) {
+      const cd = new Date(weekStart); cd.setDate(weekStart.getDate() + i);
+      const isToday = cd.toDateString() === today.toDateString();
+      const dateStr = fmt(cd);
+      const events = S.posts.filter(p => p.date === dateStr);
+      cells += `<div class="cal-cell ${isToday?'today':''}" onclick="openPostModal('${dateStr}')"><div class="cal-day">${cd.getDate()}</div>${events.map(e => `<div class="cal-event acct-${e.account}" title="${esc(e.title)}">${esc(e.title)}</div>`).join('')}</div>`;
+    }
+  } else {
+    const totalCells = Math.ceil((startDay + daysInMonth) / 7) * 7;
+    for (let i = 0; i < totalCells; i++) {
+      const dayNum = i - startDay + 1;
+      const isOther = dayNum < 1 || dayNum > daysInMonth;
+      const cd = new Date(y, mo, dayNum);
+      const isToday = cd.toDateString() === today.toDateString();
+      const dateStr = fmt(cd);
+      const events = isOther ? [] : S.posts.filter(p => p.date === dateStr);
+      cells += `<div class="cal-cell ${isOther?'other':''} ${isToday?'today':''}" onclick="${isOther?'':`openPostModal('${dateStr}')`}"><div class="cal-day">${isOther?'':dayNum}</div>${events.map(e => `<div class="cal-event acct-${e.account}" onclick="event.stopPropagation();editPost('${e.id}')" title="${esc(e.title)}">${esc(e.title)}</div>`).join('')}</div>`;
+    }
+  }
+  return controls + `<div class="cal-grid ${isWeek?'week-view':''}">${heads}${cells}</div>`;
+}
+
+function calNav(dir) { S.calDate.setMonth(S.calDate.getMonth() + dir); renderMain(); }
+function fmt(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+
+function openPostModal(date) {
+  const today = date || fmt(new Date());
+  showModal(`
+    <div class="modal-title">포스트 추가</div>
+    <div class="form-group"><label>날짜</label><input type="date" id="pm-date" value="${today}"></div>
+    <div class="form-group"><label>계정</label><select id="pm-acct">${ACCOUNTS.map((a,i)=>`<option value="${i}">${a}</option>`).join('')}</select></div>
+    <div class="form-group"><label>제목</label><input id="pm-title" placeholder="포스트 제목..."></div>
+    <div class="form-group"><label>메모</label><textarea id="pm-note" rows="3" placeholder="내용 메모..."></textarea></div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">취소</button><button class="btn btn-gold" onclick="savePost()">저장</button></div>`);
+}
+function savePost() {
+  const post = { id:'p'+Date.now(), date:document.getElementById('pm-date').value, account:parseInt(document.getElementById('pm-acct').value), title:document.getElementById('pm-title').value.trim(), note:document.getElementById('pm-note').value.trim() };
+  if (!post.title) return;
+  S.posts.push(post); save('posts', S.posts); closeModal(); renderMain();
+}
+function editPost(id) {
+  const p = S.posts.find(x => x.id === id); if (!p) return;
+  showModal(`<div class="modal-title">포스트 수정</div>
+    <div class="form-group"><label>날짜</label><input type="date" id="pm-date" value="${p.date}"></div>
+    <div class="form-group"><label>계정</label><select id="pm-acct">${ACCOUNTS.map((a,i)=>`<option value="${i}" ${p.account===i?'selected':''}>${a}</option>`).join('')}</select></div>
+    <div class="form-group"><label>제목</label><input id="pm-title" value="${esc(p.title)}"></div>
+    <div class="form-group"><label>메모</label><textarea id="pm-note" rows="3">${esc(p.note)}</textarea></div>
+    <div class="modal-actions"><button class="btn btn-danger btn-sm" onclick="deletePost('${id}')">삭제</button><button class="btn btn-outline" onclick="closeModal()">취소</button><button class="btn btn-gold" onclick="updatePost('${id}')">저장</button></div>`);
+}
+function updatePost(id) {
+  const p = S.posts.find(x => x.id === id);
+  p.date = document.getElementById('pm-date').value; p.account = parseInt(document.getElementById('pm-acct').value);
+  p.title = document.getElementById('pm-title').value.trim(); p.note = document.getElementById('pm-note').value.trim();
+  save('posts', S.posts); closeModal(); renderMain();
+}
+function deletePost(id) { S.posts = S.posts.filter(x => x.id !== id); save('posts', S.posts); closeModal(); renderMain(); }
+
+// ─── Carousel Builder (Canva-style + media) ───
+function renderCarousel() {
+  if (!S.slides.length) {
+    S.slides = [{ heading: 'Slide 1', body: '내용을 입력하세요', bg: '#0a0a0a', textColor: '#e8e8e8', fontSize: 22, fontFamily: 'sans-serif', textAlign: 'center', overlay: 0.5, media: null, mediaType: null }];
+  }
+  const sl = S.slides[S.activeSlide] || S.slides[0];
+  if (!sl.fontSize) sl.fontSize = 22;
+  if (!sl.fontFamily) sl.fontFamily = 'sans-serif';
+  if (!sl.textAlign) sl.textAlign = 'center';
+  if (sl.overlay === undefined) sl.overlay = 0.5;
+
+  const sidebar = S.slides.map((s, i) =>
+    `<div class="slide-thumb ${i===S.activeSlide?'active':''}" onclick="S.activeSlide=${i};renderMain()">
+      <div class="num">SLIDE ${i+1}</div>${esc(s.heading).substring(0,30)}
+      ${s.media ? '<span style="color:var(--success);font-size:9px"> ● 미디어</span>' : ''}
+    </div>`
+  ).join('') + `<button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px" onclick="addSlide()">+ 슬라이드 추가</button>
+  <button class="btn btn-outline btn-sm" style="width:100%;margin-top:6px" onclick="duplicateSlide()">복제</button>`;
+
+  const editor = `
+    <div class="card" style="padding:14px">
+      <div class="card-title" style="margin-bottom:10px">슬라이드 ${S.activeSlide+1} 편집</div>
+
+      <!-- Canva toolbar -->
+      <div class="canva-toolbar">
+        <select class="font-select" id="sl-font" onchange="updateSlide()">
+          <option value="sans-serif" ${sl.fontFamily==='sans-serif'?'selected':''}>Sans-serif</option>
+          <option value="serif" ${sl.fontFamily==='serif'?'selected':''}>Serif</option>
+          <option value="'Noto Sans KR',sans-serif" ${sl.fontFamily.includes('Noto')?'selected':''}>Noto Sans KR</option>
+          <option value="Georgia,serif" ${sl.fontFamily.includes('Georgia')?'selected':''}>Georgia</option>
+          <option value="monospace" ${sl.fontFamily==='monospace'?'selected':''}>Monospace</option>
+          <option value="cursive" ${sl.fontFamily==='cursive'?'selected':''}>Cursive</option>
+        </select>
+        <input type="number" id="sl-fontsize" value="${sl.fontSize}" min="10" max="72" style="width:50px;padding:4px 6px;font-size:11px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text)" onchange="updateSlide()">
+        <button onclick="setAlign('left')" class="${sl.textAlign==='left'?'active':''}">좌</button>
+        <button onclick="setAlign('center')" class="${sl.textAlign==='center'?'active':''}">중</button>
+        <button onclick="setAlign('right')" class="${sl.textAlign==='right'?'active':''}">우</button>
+      </div>
+
+      <div class="form-group"><label>제목</label><input id="sl-heading" value="${esc(sl.heading)}" oninput="updateSlide()"></div>
+      <div class="form-group"><label>본문</label><textarea id="sl-body" rows="3" oninput="updateSlide()">${esc(sl.body)}</textarea></div>
+
+      <div class="form-row">
+        <div class="form-group"><label>배경색</label><input type="color" id="sl-bg" value="${sl.bg||'#0a0a0a'}" oninput="updateSlide()" style="height:32px;padding:2px"></div>
+        <div class="form-group"><label>글자색</label><input type="color" id="sl-tc" value="${sl.textColor||'#e8e8e8'}" oninput="updateSlide()" style="height:32px;padding:2px"></div>
+      </div>
+
+      <div class="form-group">
+        <label>사진/영상 첨부</label>
+        <div class="file-drop ${sl.media ? 'has-file' : ''}" onclick="document.getElementById('sl-media-input').click()">
+          ${sl.media ? (sl.mediaType === 'video' ? '🎬 영상 첨부됨' : '🖼 이미지 첨부됨') + ' (클릭하여 변경)' : '클릭하여 사진 또는 영상 업로드'}
+        </div>
+        <input type="file" id="sl-media-input" accept="image/*,video/*" style="display:none" onchange="handleSlideMedia(this)">
+        ${sl.media ? `<button class="btn btn-danger btn-sm" style="margin-top:6px" onclick="removeSlideMedia()">미디어 제거</button>` : ''}
+      </div>
+
+      ${sl.media ? `<div class="form-group"><label>오버레이 투명도 (${Math.round((sl.overlay||0.5)*100)}%)</label><input type="range" id="sl-overlay" min="0" max="1" step="0.05" value="${sl.overlay||0.5}" oninput="updateSlide()" style="width:100%"></div>` : ''}
+
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-danger btn-sm" onclick="deleteSlide()">삭제</button>
+        <button class="btn btn-outline btn-sm" onclick="exportCarousel()">내보내기</button>
+        <button class="btn btn-gold btn-sm" onclick="shareToInstagram()">Instagram 공유</button>
+      </div>
+    </div>`;
+
+  const overlayOpacity = sl.media ? (sl.overlay || 0.5) : 0;
+  const bgStyle = sl.media && sl.mediaType === 'image' ? `background-image:url('${sl.media}');background-size:cover;background-position:center` : `background:${sl.bg||'#0a0a0a'}`;
+
+  const preview = `
+    <div class="slide-canvas" id="slideCanvas" style="${bgStyle}">
+      ${sl.media && sl.mediaType === 'video' ? `<video class="slide-media-video" src="${sl.media}" autoplay muted loop playsinline></video>` : ''}
+      ${sl.media ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,${overlayOpacity});border-radius:10px;z-index:1"></div>` : ''}
+      <div class="slide-heading" style="color:${sl.textColor||'#e8e8e8'};font-size:${sl.fontSize||22}px;font-family:${sl.fontFamily||'sans-serif'};text-align:${sl.textAlign||'center'};width:100%">${esc(sl.heading)}</div>
+      <div class="slide-body" style="color:${sl.textColor||'#e8e8e8'};font-family:${sl.fontFamily||'sans-serif'};text-align:${sl.textAlign||'center'};width:100%">${esc(sl.body).replace(/\n/g,'<br>')}</div>
+      <div class="slide-num">${S.activeSlide+1} / ${S.slides.length}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-outline btn-sm" onclick="navSlide(-1)" ${S.activeSlide===0?'disabled':''}>← 이전</button>
+      <button class="btn btn-outline btn-sm" onclick="navSlide(1)" ${S.activeSlide>=S.slides.length-1?'disabled':''}>다음 →</button>
+    </div>`;
+
+  return `<div class="carousel-workspace"><div class="carousel-sidebar">${sidebar}</div><div class="carousel-preview">${preview}</div><div class="carousel-editor">${editor}</div></div>`;
+}
+
+function navSlide(dir) { S.activeSlide = Math.max(0, Math.min(S.slides.length-1, S.activeSlide + dir)); renderMain(); }
+
+function initCarouselEvents() {}
+
+function setAlign(a) {
+  S.slides[S.activeSlide].textAlign = a;
+  save('slides', S.slides);
+  renderMain();
+}
+
+function handleSlideMedia(input) {
+  const file = input.files[0]; if (!file) return;
+  const sl = S.slides[S.activeSlide];
+  sl.mediaType = file.type.startsWith('video') ? 'video' : 'image';
+  const reader = new FileReader();
+  reader.onload = e => { sl.media = e.target.result; save('slides', S.slides); renderMain(); };
+  reader.readAsDataURL(file);
+}
+
+function removeSlideMedia() {
+  const sl = S.slides[S.activeSlide];
+  sl.media = null; sl.mediaType = null;
+  save('slides', S.slides); renderMain();
+}
+
+function updateSlide() {
+  const sl = S.slides[S.activeSlide];
+  sl.heading = document.getElementById('sl-heading').value;
+  sl.body = document.getElementById('sl-body').value;
+  sl.bg = document.getElementById('sl-bg').value;
+  sl.textColor = document.getElementById('sl-tc').value;
+  sl.fontSize = parseInt(document.getElementById('sl-fontsize').value) || 22;
+  sl.fontFamily = document.getElementById('sl-font').value;
+  const overlayEl = document.getElementById('sl-overlay');
+  if (overlayEl) sl.overlay = parseFloat(overlayEl.value);
+  save('slides', S.slides);
+  // Live update canvas
+  const canvas = document.getElementById('slideCanvas');
+  if (canvas) {
+    if (!sl.media) canvas.style.background = sl.bg;
+    const h = canvas.querySelector('.slide-heading');
+    const b = canvas.querySelector('.slide-body');
+    if (h) { h.style.color = sl.textColor; h.textContent = sl.heading; h.style.fontSize = sl.fontSize+'px'; h.style.fontFamily = sl.fontFamily; h.style.textAlign = sl.textAlign; }
+    if (b) { b.style.color = sl.textColor; b.innerHTML = esc(sl.body).replace(/\n/g,'<br>'); b.style.fontFamily = sl.fontFamily; b.style.textAlign = sl.textAlign; }
+  }
+}
+
+function addSlide() {
+  S.slides.push({ heading: `Slide ${S.slides.length+1}`, body: '', bg: '#0a0a0a', textColor: '#e8e8e8', fontSize: 22, fontFamily: 'sans-serif', textAlign: 'center', overlay: 0.5, media: null, mediaType: null });
+  S.activeSlide = S.slides.length - 1; save('slides', S.slides); renderMain();
+}
+
+function duplicateSlide() {
+  const src = S.slides[S.activeSlide];
+  S.slides.splice(S.activeSlide + 1, 0, JSON.parse(JSON.stringify(src)));
+  S.activeSlide++; save('slides', S.slides); renderMain();
+}
+
+function deleteSlide() {
+  if (S.slides.length <= 1) return;
+  S.slides.splice(S.activeSlide, 1);
+  S.activeSlide = Math.min(S.activeSlide, S.slides.length - 1);
+  save('slides', S.slides); renderMain();
+}
+
+function exportCarousel() {
+  let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;font-family:sans-serif}.slide{width:1080px;height:1350px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px;page-break-after:always;box-sizing:border-box;position:relative;overflow:hidden;background-size:cover;background-position:center}.slide h1{font-size:64px;margin-bottom:32px;text-align:center;position:relative;z-index:2}.slide p{font-size:36px;text-align:center;line-height:1.6;position:relative;z-index:2}.slide .overlay{position:absolute;inset:0;z-index:1}@media print{.slide{page-break-after:always}}</style></head><body>';
+  S.slides.forEach(s => {
+    const bgStyle = s.media && s.mediaType === 'image' ? `background-image:url('${s.media}');background-size:cover;background-position:center` : `background:${s.bg}`;
+    html += `<div class="slide" style="${bgStyle};color:${s.textColor};font-family:${s.fontFamily}">${s.media ? `<div class="overlay" style="background:rgba(0,0,0,${s.overlay||0.5})"></div>` : ''}<h1 style="text-align:${s.textAlign}">${esc(s.heading)}</h1><p style="text-align:${s.textAlign}">${esc(s.body).replace(/\n/g,'<br>')}</p></div>`;
+  });
+  html += '</body></html>';
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'carousel_export.html'; a.click();
+}
+
+function shareToInstagram() {
+  // Export as downloadable images then open Instagram
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080; canvas.height = 1350;
+  const ctx = canvas.getContext('2d');
+
+  async function exportSlides() {
+    for (let i = 0; i < S.slides.length; i++) {
+      const sl = S.slides[i];
+      ctx.clearRect(0, 0, 1080, 1350);
+
+      // Background
+      if (sl.media && sl.mediaType === 'image') {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        await new Promise(r => { img.onload = r; img.src = sl.media; });
+        const scale = Math.max(1080 / img.width, 1350 / img.height);
+        const w = img.width * scale, h = img.height * scale;
+        ctx.drawImage(img, (1080 - w)/2, (1350 - h)/2, w, h);
+        ctx.fillStyle = `rgba(0,0,0,${sl.overlay||0.5})`;
+        ctx.fillRect(0, 0, 1080, 1350);
+      } else {
+        ctx.fillStyle = sl.bg || '#0a0a0a';
+        ctx.fillRect(0, 0, 1080, 1350);
+      }
+
+      // Text
+      ctx.fillStyle = sl.textColor || '#e8e8e8';
+      ctx.textAlign = sl.textAlign || 'center';
+      const x = sl.textAlign === 'left' ? 80 : sl.textAlign === 'right' ? 1000 : 540;
+
+      ctx.font = `700 ${(sl.fontSize||22) * 3}px ${sl.fontFamily || 'sans-serif'}`;
+      wrapText(ctx, sl.heading || '', x, 500, 920, (sl.fontSize||22) * 3.5);
+
+      ctx.font = `400 ${14 * 3}px ${sl.fontFamily || 'sans-serif'}`;
+      wrapText(ctx, sl.body || '', x, 700, 920, 52);
+
+      // Page number
+      ctx.font = '30px sans-serif';
+      ctx.fillStyle = '#666';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${i+1} / ${S.slides.length}`, 1040, 1310);
+
+      canvas.toBlob(blob => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `slide_${i+1}.png`;
+        a.click();
+      }, 'image/png');
+
+      await new Promise(r => setTimeout(r, 300));
+    }
+
+    showModal(`
+      <div class="modal-title">Instagram 공유 준비 완료</div>
+      <p style="color:var(--text2);line-height:1.7;font-size:13px">
+        ${S.slides.length}장의 슬라이드가 PNG로 다운로드되었습니다.<br><br>
+        <strong>Instagram 업로드 방법:</strong><br>
+        1. 다운로드된 이미지를 모바일로 전송 (AirDrop/카카오톡)<br>
+        2. Instagram 앱에서 + 버튼 → 여러 장 선택<br>
+        3. 순서대로 슬라이드 이미지 선택<br>
+        4. 캡션 추가 후 공유<br><br>
+        <em style="color:var(--gold)">💡 팁: AI 캡션 탭에서 캡션을 먼저 생성해두세요!</em>
+      </p>
+      <div class="modal-actions"><button class="btn btn-gold" onclick="closeModal()">확인</button></div>
+    `);
+  }
+
+  exportSlides();
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const lines = text.split('\n');
+  let cy = y;
+  for (const line of lines) {
+    const words = line.split('');
+    let current = '';
+    for (const char of words) {
+      const test = current + char;
+      if (ctx.measureText(test).width > maxWidth && current) {
+        ctx.fillText(current, x, cy);
+        current = char; cy += lineHeight;
+      } else { current = test; }
+    }
+    ctx.fillText(current, x, cy);
+    cy += lineHeight;
+  }
+}
+
+// ─── AI Caption (unchanged) ───
+function renderCaption() {
+  return `
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">AI 캡션 생성기</div>
+        <div class="form-group"><label>계정</label><select id="cap-acct">${ACCOUNTS.map(a=>`<option>${a}</option>`).join('')}</select></div>
+        <div class="form-group"><label>주제 / Topic</label><input id="cap-topic" placeholder="e.g. 전시회 방문, 카페 추천..."></div>
+        <div class="form-group"><label>분위기 / Mood</label><select id="cap-mood">
+          <option>Elegant 우아한</option><option>Casual 캐주얼</option><option>Inspirational 영감</option><option>Playful 장난스러운</option><option>Minimal 미니멀</option><option>Luxurious 럭셔리</option>
+        </select></div>
+        <div class="form-group"><label>언어</label><select id="cap-lang">
+          <option>Korean 한국어</option><option>English 영어</option><option>Mixed 혼합</option>
+        </select></div>
+        <div class="form-group"><label>추가 키워드</label><input id="cap-kw" placeholder="쉼표로 구분..."></div>
+        <button class="btn btn-gold" onclick="generateCaption()" style="width:100%">캡션 생성하기 ✦</button>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">생성된 캡션</div>
+        <div class="ai-output" id="cap-output"><span style="color:var(--text3)">왼쪽에서 주제와 분위기를 입력하고 생성 버튼을 눌러주세요.</span></div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="copyCaption()">복사하기</button>
+          <button class="btn btn-outline btn-sm" onclick="generateCaption()">다시 생성</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function generateCaption() {
+  const topic = document.getElementById('cap-topic').value.trim();
+  const mood = document.getElementById('cap-mood').value;
+  const lang = document.getElementById('cap-lang').value;
+  const kw = document.getElementById('cap-kw').value.trim();
+  const acct = document.getElementById('cap-acct').value;
+  if (!topic) { document.getElementById('cap-output').innerHTML = '<span style="color:var(--danger)">주제를 입력해주세요.</span>'; return; }
+
+  const templates = {
+    'Korean 한국어': {
+      'Elegant 우아한': [`${topic}의 순간, 고요한 아름다움 속에서.\n\n일상 속 작은 예술을 발견하는 시간.\n감각을 깨우는 ${topic}의 매력에 빠져봐요.`,`${topic} — 시간이 멈추는 순간.\n\n아름다움은 늘 가까이에 있었어요.\n오늘도 나만의 미학을 찾아서.`],
+      'Casual 캐주얼': [`오늘은 ${topic} 하는 날 ☺️\n\n이런 소소한 일상이 좋아요.\n여러분도 이런 순간 있으시죠?`,`${topic} 진짜 최고 아닌가요?\n\n요즘 이것에 완전 빠졌어요.\n추천 있으면 댓글로 알려주세요!`],
+      'Inspirational 영감': [`${topic}에서 찾은 영감.\n\n매일이 새로운 시작이에요.\n작은 변화가 큰 차이를 만들어요.`,`${topic}이(가) 알려준 것 —\n\n진짜 나다운 삶을 살기 위해\n오늘도 한 걸음 더 나아가요.`],
+      'Playful 장난스러운': [`${topic} = 행복 충전 완료 🔋\n\n이런 게 진짜 힐링이지~\n좋아요 누르면 행운이 올지도? 😉`,`${topic} 없이 못 사는 사람 여기요 🙋‍♀️\n\n인정하는 사람 손 들어!\n같은 마음이면 팔로우 해줘요 💛`],
+      'Minimal 미니멀': [`${topic}.\n\n그것으로 충분해요.`,`${topic} —\n\n오늘의 기록.`],
+      'Luxurious 럭셔리': [`${topic}의 품격.\n\n진짜 좋은 것은 설명이 필요 없어요.\n감각이 이끄는 대로, 나만의 선택.`,`${topic} — 타협 없는 취향의 결정체.\n\n일상도 특별하게.\n모든 순간이 나를 정의해요.`]
+    },
+    'English 영어': {
+      'Elegant 우아한': [`A moment with ${topic} — where beauty meets intention.\n\nCurating life, one detail at a time.`,`${topic} — the art of living well.\n\nEvery detail tells a story.`],
+      'Casual 캐주얼': [`Just a ${topic} kind of day ☺️\n\nThese little moments make everything worth it.`,`Currently obsessed with ${topic}.\n\nAnyone else? Drop your recs below!`],
+      'Inspirational 영감': [`${topic} taught me something today.\n\nGrowth is in the quiet moments.\nKeep moving forward.`,`Finding inspiration in ${topic}.\n\nEvery day is a chance to create something beautiful.`],
+      'Playful 장난스러운': [`${topic} energy today ✨\n\nNo thoughts, just vibes.\nDouble tap if you agree 😉`,`POV: You discover ${topic} and your whole week is made 🙌`],
+      'Minimal 미니멀': [`${topic}.\n\nNothing more needed.`,`${topic} —\n\nToday's note.`],
+      'Luxurious 럭셔리': [`${topic} — uncompromising taste.\n\nElevating every moment.\nThis is the standard.`,`The art of ${topic}.\n\nLuxury is a mindset, not a price tag.`]
+    },
+    'Mixed 혼합': {
+      'Elegant 우아한': [`${topic}의 순간 ✦\n\nWhere beauty meets intention.\n일상 속 작은 예술, curating life.`,`${topic} — timeless 아름다움.\n\n감각을 깨우는 moments.`],
+      'Casual 캐주얼': [`오늘의 vibe: ${topic} ☺️\n\nThese little moments가 좋아요.\nDrop your recs 댓글로!`,`${topic} kind of day ~\n\n이런 소소한 일상이 the best.`],
+      'Inspirational 영감': [`${topic}에서 찾은 inspiration.\n\nEvery day가 새로운 시작.\n작은 changes, big differences.`,`Finding beauty in ${topic}.\n\n매일이 chance to grow.`],
+      'Playful 장난스러운': [`${topic} = happiness overload 🔋\n\n인정하는 사람 raise your hand 🙋‍♀️\nFollow for more vibes 💛`,`POV: ${topic} 발견하고 기분 최고 ✨\n\nNo thoughts, just 행복 ~`],
+      'Minimal 미니멀': [`${topic}.\n\n그것으로 enough.`,`${topic} —\n\nToday's 기록.`],
+      'Luxurious 럭셔리': [`${topic}의 품격 — uncompromising.\n\n감각이 이끄는 luxury.\nEvery detail, 나를 정의해요.`,`The art of ${topic}.\n\n타협 없는 taste, elevated moments.`]
+    }
+  };
+
+  const t = templates[lang]?.[mood] || templates['Korean 한국어']['Elegant 우아한'];
+  const caption = t[Math.floor(Math.random() * t.length)];
+  const baseTagsKr = ['#일상','#데일리','#서울','#서울라이프','#인플루언서','#라이프스타일','#감성','#취향'];
+  const baseTagsEn = ['#seoul','#lifestyle','#aesthetic','#daily','#influencer','#curator','#ootd','#vibes'];
+  const acctTag = acct === '@krystalha_' ? '#krystalha_' : '#from_krystal';
+  let topicTags = topic.split(/[\s,]+/).filter(Boolean).map(w => `#${w.replace(/[^a-zA-Z0-9가-힣]/g,'')}`);
+  let kwTags = kw ? kw.split(/[,，\s]+/).filter(Boolean).map(w => `#${w.replace(/[^a-zA-Z0-9가-힣]/g,'')}`) : [];
+  const isKr = lang.includes('Korean') || lang.includes('Mixed');
+  let allTags = [...new Set([acctTag, ...topicTags, ...kwTags, ...(isKr ? baseTagsKr : baseTagsEn)])].slice(0, 15);
+  document.getElementById('cap-output').innerHTML = esc(caption) + `<span class="hashtags">\n${allTags.join(' ')}</span>`;
+}
+
+function copyCaption() {
+  const el = document.getElementById('cap-output');
+  navigator.clipboard.writeText(el.textContent).then(() => { el.style.borderColor = 'var(--gold)'; setTimeout(() => el.style.borderColor = '', 800); });
+}
+
+// ─── Brand Deals (with file attachments) ───
+function renderDeals() {
+  const statusOrder = { negotiating: 0, confirmed: 1, completed: 2 };
+  const sorted = [...S.deals].sort((a, b) => (statusOrder[a.status]||0) - (statusOrder[b.status]||0));
+  const total = S.deals.reduce((s, d) => s + (parseFloat(d.value) || 0), 0);
+  const confirmed = S.deals.filter(d => d.status === 'confirmed' || d.status === 'completed').reduce((s, d) => s + (parseFloat(d.value) || 0), 0);
+
+  let stats = `<div class="grid-3" style="margin-bottom:20px">
+    <div class="card" style="text-align:center"><div style="font-size:24px;font-weight:700;color:var(--gold)">${S.deals.length}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">전체 딜</div></div>
+    <div class="card" style="text-align:center"><div style="font-size:24px;font-weight:700;color:var(--gold)">₩${formatNum(total)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">전체 금액</div></div>
+    <div class="card" style="text-align:center"><div style="font-size:24px;font-weight:700;color:var(--success)">₩${formatNum(confirmed)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">확정 금액</div></div>
+  </div>`;
+
+  let rows = sorted.length ? sorted.map(d => {
+    const sc = d.status === 'completed' ? 'badge-success' : d.status === 'confirmed' ? 'badge-gold' : 'badge-warn';
+    const sl = d.status === 'completed' ? '완료' : d.status === 'confirmed' ? '확정' : '협상중';
+    const files = [];
+    if (d.contractFile) files.push(`<span class="deal-file-badge" onclick="viewFile('${d.id}','contract')">📄 계약서</span>`);
+    if (d.briefFile) files.push(`<span class="deal-file-badge" onclick="viewFile('${d.id}','brief')">📋 소구점</span>`);
+    return `<div class="deal-row">
+      <div class="deal-brand">${esc(d.brand)}</div>
+      <div class="deal-value">₩${formatNum(d.value)}</div>
+      <div class="deal-deadline">${d.deadline || '-'}</div>
+      <span class="badge ${sc}">${sl}</span>
+      <div class="deal-actions">
+        <button class="btn-gmail" onclick="openEmailComposer('${esc(d.brand)}','','deal')">📧</button>
+        <button class="btn btn-outline btn-sm" onclick="editDeal('${d.id}')">수정</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDeal('${d.id}')">삭제</button>
+      </div>
+      ${files.length ? `<div class="deal-files">${files.join('')}</div>` : ''}
+    </div>`;
+  }).join('') : '<div class="empty"><div class="empty-icon">✦</div>브랜드 딜이 없습니다</div>';
+
+  const importZone = `
+    <div class="email-import-zone" id="emailImportZone" onclick="document.getElementById('eml-input').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="event.preventDefault();this.classList.remove('drag-over');handleEmailDrop(event)">
+      <div class="import-icon">📧</div>
+      <div class="import-title">광고 이메일 붙여넣기 / 파일 드롭</div>
+      <div class="import-sub">이메일 원문을 복사해서 붙여넣거나, .eml 파일을 드래그하세요</div>
+      <div class="import-sub" style="margin-top:4px;color:var(--gold)">브랜드명, 금액, 일정, 소구점을 자동으로 추출합니다</div>
+      <input type="file" id="eml-input" accept=".eml,.txt,.html" style="display:none" onchange="handleEmlFile(this)">
+    </div>
+    <div style="text-align:center;margin:-8px 0 16px"><button class="btn btn-outline btn-sm" onclick="openEmailPasteModal()">또는 이메일 텍스트 직접 붙여넣기</button></div>
+    <div id="parsedEmailResult"></div>`;
+
+  return `${renderGmailBar()}${importZone}${stats}<div class="card"><div class="card-header"><div class="card-title">브랜드 딜 목록</div><button class="btn btn-gold btn-sm" onclick="openDealModal()">+ 딜 추가</button></div>${rows}</div>`;
+}
+
+function formatNum(n) { return Number(n).toLocaleString('ko-KR'); }
+
+// ─── Email Parser ───
+function openEmailPasteModal() {
+  showModal(`
+    <div class="modal-title">📧 이메일 원문 붙여넣기</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5">
+      Gmail에서 광고/협업 제안 이메일을 열고, 전체 내용을 복사(Ctrl+A → Ctrl+C)해서 아래에 붙여넣으세요.
+    </p>
+    <div class="form-group">
+      <label>이메일 원문</label>
+      <textarea id="email-paste-area" rows="12" placeholder="이메일 전체 내용을 여기에 붙여넣으세요...&#10;&#10;예시:&#10;보내는 사람: brand@company.com&#10;제목: [광고 제안] OOO x 크리스탈 협업&#10;&#10;안녕하세요 크리스탈님,&#10;저희 브랜드 OOO에서 협업을 제안드립니다...&#10;금액: 000만원&#10;일정: 2026년 4월..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-gold" onclick="parseEmailFromModal()">분석하기</button>
+    </div>
+  `);
+}
+
+function parseEmailFromModal() {
+  const text = document.getElementById('email-paste-area').value.trim();
+  if (!text) return;
+  closeModal();
+  const parsed = parseEmailContent(text);
+  showParsedResult(parsed, text);
+}
+
+function handleEmailDrop(e) {
+  const files = e.dataTransfer.files;
+  if (files.length) {
+    handleEmlFileObj(files[0]);
+    return;
+  }
+  const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text/html');
+  if (text) {
+    const parsed = parseEmailContent(text.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' '));
+    showParsedResult(parsed, text);
+  }
+}
+
+function handleEmlFile(input) {
+  if (input.files[0]) handleEmlFileObj(input.files[0]);
+  input.value = '';
+}
+
+function handleEmlFileObj(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    let text = e.target.result;
+    // Strip HTML tags if present
+    text = text.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+    // Decode quoted-printable if present
+    text = text.replace(/=\r?\n/g, '').replace(/=([\dA-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+    const parsed = parseEmailContent(text);
+    showParsedResult(parsed, text);
+  };
+  reader.readAsText(file);
+}
+
+function parseEmailContent(text) {
+  const result = {
+    brand: '',
+    sender: '',
+    subject: '',
+    value: '',
+    deadline: '',
+    deliverables: [],
+    keyPoints: [],
+    requirements: [],
+    contact: '',
+    rawText: text,
+  };
+
+  // Extract sender email
+  const senderMatch = text.match(/(?:from|보내는\s*사람|발신|보낸\s*사람)\s*[:：]\s*([^\n<]+(?:<[^>]+>)?)/i);
+  if (senderMatch) result.sender = senderMatch[1].trim();
+
+  // Extract subject
+  const subjectMatch = text.match(/(?:subject|제목|件名)\s*[:：]\s*([^\n]+)/i);
+  if (subjectMatch) result.subject = subjectMatch[1].trim();
+
+  // Extract brand name
+  const brandPatterns = [
+    /(?:브랜드|brand)\s*[:：]\s*([^\n,]+)/i,
+    /(?:저희|당사)\s+([가-힣A-Za-z0-9\s&.]+?)(?:에서|는|이|가|의)/,
+    /\[(?:광고|협업|제안|AD)\]\s*([^\]x×]+?)(?:\s*[x×]\s*)/i,
+    /([A-Z][A-Za-z0-9&.\s]{1,20})\s*(?:x|×)\s*(?:크리스탈|Krystal)/i,
+  ];
+  for (const p of brandPatterns) {
+    const m = text.match(p);
+    if (m) { result.brand = m[1].trim(); break; }
+  }
+  // Fallback: try subject line
+  if (!result.brand && result.subject) {
+    const subBrand = result.subject.match(/(?:\[.*?\]\s*)?([^\[\]x×]+?)(?:\s*[x×]|\s*협업|\s*제안)/i);
+    if (subBrand) result.brand = subBrand[1].replace(/[\[\]]/g, '').trim();
+  }
+
+  // Extract monetary value
+  const valuePatterns = [
+    /(?:금액|단가|비용|광고비|페이|fee|budget|price|cost)\s*[:：]?\s*(?:약\s*)?(?:₩|원|KRW)?\s*([\d,]+)\s*(?:만\s*원|만원)/i,
+    /(?:금액|단가|비용|광고비|페이|fee|budget|price|cost)\s*[:：]?\s*(?:약\s*)?(?:₩|원|KRW)?\s*([\d,]+)\s*(?:원)/i,
+    /([\d,]+)\s*(?:만\s*원|만원)/,
+    /₩\s*([\d,]+)/,
+  ];
+  for (const p of valuePatterns) {
+    const m = text.match(p);
+    if (m) {
+      let val = parseInt(m[0].includes('만') ? m[1].replace(/,/g, '') + '0000' : m[1].replace(/,/g, ''));
+      result.value = val;
+      break;
+    }
+  }
+
+  // Extract dates/deadlines
+  const datePatterns = [
+    /(?:일정|마감|기한|deadline|날짜|업로드\s*(?:예정\s*)?일|게시\s*(?:예정\s*)?일|라이브\s*일)\s*[:：]?\s*([^\n]{5,40})/i,
+    /(\d{4})\s*[년./-]\s*(\d{1,2})\s*[월./-]\s*(\d{1,2})\s*일?/,
+    /(\d{1,2})\s*[월.]\s*(\d{1,2})\s*일?\s*(?:까지|이전|~|부터)/,
+  ];
+  for (const p of datePatterns) {
+    const m = text.match(p);
+    if (m) { result.deadline = m[0].trim().substring(0, 40); break; }
+  }
+
+  // Extract deliverables (콘텐츠 유형)
+  const deliverableKeywords = ['피드','릴스','reels','스토리','story','유튜브','youtube','shorts','쇼츠','틱톡','tiktok','블로그','blog','라이브','live','영상','사진','포스팅','리뷰','언박싱','unboxing','브이로그','vlog'];
+  deliverableKeywords.forEach(kw => {
+    if (text.toLowerCase().includes(kw)) {
+      const label = kw.charAt(0).toUpperCase() + kw.slice(1);
+      if (!result.deliverables.includes(label)) result.deliverables.push(label);
+    }
+  });
+
+  // Extract key selling points / requirements
+  const keyPointPatterns = [
+    /(?:소구\s*포인트|소구점|key\s*message|핵심\s*메시지|강조\s*포인트|필수\s*포함|must\s*include)\s*[:：]?\s*([^\n]+(?:\n[-•·*]\s*[^\n]+)*)/i,
+    /(?:요청\s*사항|가이드|가이드라인|guideline|브리프|brief)\s*[:：]?\s*([^\n]+(?:\n[-•·*]\s*[^\n]+)*)/i,
+  ];
+  for (const p of keyPointPatterns) {
+    const m = text.match(p);
+    if (m) {
+      const points = m[1].split(/\n|[-•·*]\s+/).map(s => s.trim()).filter(Boolean);
+      result.keyPoints.push(...points);
+    }
+  }
+
+  // Extract requirements / restrictions
+  const reqPatterns = [
+    /(?:필수\s*(?:사항|조건|포함)|주의\s*사항|제한|금지|restrictions?|requirements?)\s*[:：]?\s*([^\n]+(?:\n[-•·*]\s*[^\n]+)*)/i,
+  ];
+  for (const p of reqPatterns) {
+    const m = text.match(p);
+    if (m) {
+      const reqs = m[1].split(/\n|[-•·*]\s+/).map(s => s.trim()).filter(Boolean);
+      result.requirements.push(...reqs);
+    }
+  }
+
+  // Extract contact info
+  const contactMatch = text.match(/(?:담당자|연락처|contact|매니저|manager)\s*[:：]?\s*([^\n]+)/i);
+  if (contactMatch) result.contact = contactMatch[1].trim();
+  // Also try to find an email in the body
+  const emailInBody = text.match(/[\w.-]+@[\w.-]+\.\w{2,}/);
+  if (emailInBody && !result.contact) result.contact = emailInBody[0];
+
+  return result;
+}
+
+function showParsedResult(parsed, rawText) {
+  const el = document.getElementById('parsedEmailResult');
+  if (!el) return;
+
+  const hasData = parsed.brand || parsed.value || parsed.deadline;
+
+  el.innerHTML = `
+    <div class="parsed-result">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div class="card-title" style="color:var(--gold)">📧 이메일 분석 결과</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${hasData ? '아래 내용을 확인 후 딜로 등록하세요' : '분석 가능한 정보가 제한적입니다. 직접 수정해주세요'}</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('parsedEmailResult').innerHTML=''">닫기</button>
+      </div>
+
+      ${parsed.subject ? `<div class="parsed-field"><div class="parsed-label">제목</div><div class="parsed-value">${esc(parsed.subject)}</div></div>` : ''}
+      <div class="parsed-field">
+        <div class="parsed-label">브랜드</div>
+        <div class="parsed-value"><input id="parsed-brand" value="${esc(parsed.brand)}" placeholder="브랜드명 입력..." style="width:100%"></div>
+      </div>
+      ${parsed.sender ? `<div class="parsed-field"><div class="parsed-label">발신자</div><div class="parsed-value">${esc(parsed.sender)}</div></div>` : ''}
+      ${parsed.contact ? `<div class="parsed-field"><div class="parsed-label">담당자</div><div class="parsed-value">${esc(parsed.contact)}</div></div>` : ''}
+      <div class="parsed-field">
+        <div class="parsed-label">금액</div>
+        <div class="parsed-value"><input id="parsed-value" type="number" value="${parsed.value || ''}" placeholder="금액 (원)..." style="width:100%"></div>
+      </div>
+      <div class="parsed-field">
+        <div class="parsed-label">일정/마감</div>
+        <div class="parsed-value"><input id="parsed-deadline" value="${esc(parsed.deadline)}" placeholder="마감일..." style="width:100%"></div>
+      </div>
+      ${parsed.deliverables.length ? `<div class="parsed-field"><div class="parsed-label">콘텐츠</div><div class="parsed-value">${parsed.deliverables.map(d => `<span class="parsed-tag">${esc(d)}</span>`).join('')}</div></div>` : ''}
+      ${parsed.keyPoints.length ? `<div class="parsed-field"><div class="parsed-label">소구점</div><div class="parsed-value">${parsed.keyPoints.map(p => `<div style="margin-bottom:3px">• ${esc(p)}</div>`).join('')}</div></div>` : ''}
+      ${parsed.requirements.length ? `<div class="parsed-field"><div class="parsed-label">요구사항</div><div class="parsed-value">${parsed.requirements.map(r => `<div style="margin-bottom:3px">• ${esc(r)}</div>`).join('')}</div></div>` : ''}
+
+      <div class="form-group" style="margin-top:14px">
+        <label>추출된 원문 (접기/펼치기)</label>
+        <details style="margin-top:4px"><summary style="font-size:11px;color:var(--text3);cursor:pointer">원문 보기</summary><pre style="font-size:11px;color:var(--text3);white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:8px;padding:10px;background:var(--surface3);border-radius:6px">${esc(rawText.substring(0, 3000))}</pre></details>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-gold" onclick="createDealFromParsed()">브랜드 딜로 등록</button>
+        <button class="btn btn-outline btn-sm" onclick="createDealFromParsed(true)">CRM에도 추가</button>
+      </div>
+    </div>`;
+
+  // Scroll to result
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function createDealFromParsed(alsoCRM) {
+  const brand = document.getElementById('parsed-brand').value.trim();
+  const value = document.getElementById('parsed-value').value;
+  const deadline = document.getElementById('parsed-deadline').value.trim();
+
+  if (!brand) { alert('브랜드명을 입력해주세요'); return; }
+
+  // Create deal
+  const deal = {
+    id: 'd' + Date.now(),
+    brand,
+    value: value || '',
+    deadline: deadline || '',
+    status: 'negotiating',
+    note: '📧 이메일에서 자동 추출됨',
+    contractFile: null, contractName: '',
+    briefFile: null, briefName: '',
+  };
+  S.deals.push(deal);
+  save('deals', S.deals);
+
+  // Optionally add to CRM
+  if (alsoCRM) {
+    const existing = S.contacts.find(c => c.brand.toLowerCase().includes(brand.toLowerCase()));
+    if (!existing) {
+      S.contacts.push({
+        id: 'c' + Date.now(),
+        brand,
+        contact: document.querySelector('.parsed-field .parsed-value')?.textContent || '',
+        platform: '',
+        category: 'other',
+        status: 'contacted',
+        notes: '📧 이메일에서 자동 추가됨',
+      });
+      save('contacts', S.contacts);
+    }
+  }
+
+  document.getElementById('parsedEmailResult').innerHTML = '';
+  renderMain();
+}
+
+function openDealModal(deal) {
+  const d = deal || { brand:'', value:'', deadline:'', status:'negotiating', note:'', contractFile:null, contractName:'', briefFile:null, briefName:'' };
+  const isEdit = !!deal;
+  showModal(`
+    <div class="modal-title">${isEdit ? '딜 수정' : '브랜드 딜 추가'}</div>
+    <div class="form-group"><label>브랜드명</label><input id="dl-brand" value="${esc(d.brand)}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>금액 (₩)</label><input type="number" id="dl-value" value="${d.value}"></div>
+      <div class="form-group"><label>마감일</label><input type="date" id="dl-deadline" value="${d.deadline||''}"></div>
+    </div>
+    <div class="form-group"><label>상태</label><select id="dl-status">
+      <option value="negotiating" ${d.status==='negotiating'?'selected':''}>협상중 Negotiating</option>
+      <option value="confirmed" ${d.status==='confirmed'?'selected':''}>확정 Confirmed</option>
+      <option value="completed" ${d.status==='completed'?'selected':''}>완료 Completed</option>
+    </select></div>
+    <div class="form-group"><label>메모</label><textarea id="dl-note" rows="2">${esc(d.note||'')}</textarea></div>
+    <div class="gold-line"></div>
+    <div class="form-group">
+      <label>📄 계약서 첨부</label>
+      <div class="file-drop ${d.contractFile?'has-file':''}" onclick="document.getElementById('dl-contract-input').click()">
+        ${d.contractFile ? `✅ ${esc(d.contractName)} (클릭하여 변경)` : '클릭하여 계약서 파일 업로드 (PDF, 이미지 등)'}
+      </div>
+      <input type="file" id="dl-contract-input" accept=".pdf,.doc,.docx,.hwp,.jpg,.jpeg,.png" style="display:none" onchange="handleDealFile(this,'contract')">
+    </div>
+    <div class="form-group">
+      <label>📋 바라는 소구점 / 브리프 첨부</label>
+      <div class="file-drop ${d.briefFile?'has-file':''}" onclick="document.getElementById('dl-brief-input').click()">
+        ${d.briefFile ? `✅ ${esc(d.briefName)} (클릭하여 변경)` : '클릭하여 소구점/브리프 파일 업로드'}
+      </div>
+      <input type="file" id="dl-brief-input" accept=".pdf,.doc,.docx,.hwp,.jpg,.jpeg,.png,.ppt,.pptx" style="display:none" onchange="handleDealFile(this,'brief')">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-gold" onclick="${isEdit ? `updateDeal('${d.id}')` : 'saveDeal()'}">${isEdit ? '저장' : '추가'}</button>
+    </div>`);
+
+  // Store temp file data
+  window._dealFiles = { contract: d.contractFile || null, contractName: d.contractName || '', brief: d.briefFile || null, briefName: d.briefName || '' };
+}
+
+function handleDealFile(input, type) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    window._dealFiles[type] = e.target.result;
+    window._dealFiles[type + 'Name'] = file.name;
+    const drop = input.previousElementSibling;
+    drop.className = 'file-drop has-file';
+    drop.textContent = `✅ ${file.name} (클릭하여 변경)`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveDeal() {
+  const deal = {
+    id: 'd' + Date.now(),
+    brand: document.getElementById('dl-brand').value.trim(),
+    value: document.getElementById('dl-value').value,
+    deadline: document.getElementById('dl-deadline').value,
+    status: document.getElementById('dl-status').value,
+    note: document.getElementById('dl-note').value.trim(),
+    contractFile: window._dealFiles?.contract || null,
+    contractName: window._dealFiles?.contractName || '',
+    briefFile: window._dealFiles?.brief || null,
+    briefName: window._dealFiles?.briefName || '',
+  };
+  if (!deal.brand) return;
+  S.deals.push(deal); save('deals', S.deals); closeModal(); renderMain();
+}
+
+function editDeal(id) { openDealModal(S.deals.find(d => d.id === id)); }
+
+function updateDeal(id) {
+  const d = S.deals.find(x => x.id === id);
+  d.brand = document.getElementById('dl-brand').value.trim();
+  d.value = document.getElementById('dl-value').value;
+  d.deadline = document.getElementById('dl-deadline').value;
+  d.status = document.getElementById('dl-status').value;
+  d.note = document.getElementById('dl-note').value.trim();
+  d.contractFile = window._dealFiles?.contract || d.contractFile;
+  d.contractName = window._dealFiles?.contractName || d.contractName;
+  d.briefFile = window._dealFiles?.brief || d.briefFile;
+  d.briefName = window._dealFiles?.briefName || d.briefName;
+  save('deals', S.deals); closeModal(); renderMain();
+}
+
+function deleteDeal(id) { S.deals = S.deals.filter(d => d.id !== id); save('deals', S.deals); renderMain(); }
+
+function viewFile(dealId, type) {
+  const d = S.deals.find(x => x.id === dealId);
+  const file = type === 'contract' ? d.contractFile : d.briefFile;
+  const name = type === 'contract' ? d.contractName : d.briefName;
+  if (!file) return;
+
+  if (file.startsWith('data:image')) {
+    showModal(`<div class="modal-title">${type === 'contract' ? '📄 계약서' : '📋 소구점'} — ${esc(name)}</div>
+      <img src="${file}" style="width:100%;border-radius:8px;border:1px solid var(--border)">
+      <div class="modal-actions"><button class="btn btn-outline" onclick="downloadFile('${dealId}','${type}')">다운로드</button><button class="btn btn-gold" onclick="closeModal()">닫기</button></div>`);
+  } else {
+    downloadFile(dealId, type);
+  }
+}
+
+function downloadFile(dealId, type) {
+  const d = S.deals.find(x => x.id === dealId);
+  const file = type === 'contract' ? d.contractFile : d.briefFile;
+  const name = type === 'contract' ? d.contractName : d.briefName;
+  const a = document.createElement('a');
+  a.href = file; a.download = name; a.click();
+}
+
+// ─── Script & Viral Builder (with screenshot analysis) ───
+window._scriptScreenshots = [];
+
+function renderScript() {
+  let saved = S.scripts.length ? `
+    <div class="gold-line"></div>
+    <div class="section-header"><div class="section-title">저장된 스크립트</div></div>
+    ${S.scripts.map(s => `
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">${esc(s.topic)}</div><div class="section-sub">${s.date}</div></div>
+          <button class="btn btn-danger btn-sm" onclick="deleteScript('${s.id}')">삭제</button>
+        </div>
+        <div class="script-block"><div class="script-label">🎣 Hook 훅</div><div class="script-text">${esc(s.hook)}</div></div>
+        <div class="script-block"><div class="script-label">📖 Body 본문</div><div class="script-text">${esc(s.body)}</div></div>
+        <div class="script-block"><div class="script-label">🎯 CTA 콜투액션</div><div class="script-text">${esc(s.cta)}</div></div>
+        ${s.screenshots && s.screenshots.length ? `<div style="font-size:11px;color:var(--text3);margin-top:8px">📸 참고 캡쳐 ${s.screenshots.length}장 포함</div>` : ''}
+      </div>
+    `).join('')}` : '';
+
+  return `
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">스크립트 & 바이럴 구조 빌더</div>
+        <div class="form-group"><label>영상 아이디어 / 주제</label><input id="sc-topic" placeholder="e.g. 성수동 카페 투어, 전시회 브이로그..."></div>
+        <div class="form-group"><label>콘텐츠 유형</label><select id="sc-type">
+          <option>릴스 / Reels</option><option>유튜브 쇼츠 / Shorts</option><option>TikTok 틱톡</option><option>유튜브 본편 / YouTube</option><option>스토리 / Story</option>
+        </select></div>
+        <div class="form-group"><label>타겟 감정</label><select id="sc-emotion">
+          <option>궁금증 유발 Curiosity</option><option>공감 Relatability</option><option>놀라움 Surprise</option><option>FOMO</option><option>영감 Inspiration</option>
+        </select></div>
+        <button class="btn btn-gold" onclick="generateScript()" style="width:100%">구조 생성하기 ✦</button>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">📸 영상 캡쳐 참고 (선택)</div>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5">
+          레퍼런스 영상의 캡쳐 화면을 넣으면 구조를 분석하여 스크립트를 생성합니다.
+        </p>
+        <div class="file-drop" onclick="document.getElementById('ss-input').click()">
+          클릭하여 영상 캡쳐 이미지 추가 (여러 장 가능)
+        </div>
+        <input type="file" id="ss-input" accept="image/*" multiple style="display:none" onchange="handleScreenshots(this)">
+        <div class="screenshot-grid" id="ss-grid"></div>
+      </div>
+    </div>
+    <div id="script-result"></div>
+    ${saved}`;
+}
+
+function handleScreenshots(input) {
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      window._scriptScreenshots.push(e.target.result);
+      renderScreenshotGrid();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderScreenshotGrid() {
+  const grid = document.getElementById('ss-grid');
+  if (!grid) return;
+  grid.innerHTML = window._scriptScreenshots.map((src, i) =>
+    `<div class="screenshot-item">
+      <img src="${src}" alt="캡쳐 ${i+1}">
+      <div class="remove-ss" onclick="removeScreenshot(${i})">✕</div>
+    </div>`
+  ).join('');
+}
+
+function removeScreenshot(i) {
+  window._scriptScreenshots.splice(i, 1);
+  renderScreenshotGrid();
+}
+
+function generateScript() {
+  const topic = document.getElementById('sc-topic').value.trim();
+  const type = document.getElementById('sc-type').value;
+  const emotion = document.getElementById('sc-emotion').value;
+  if (!topic) return;
+
+  const hasScreenshots = window._scriptScreenshots.length > 0;
+  const ssCount = window._scriptScreenshots.length;
+
+  // Enhanced generation when screenshots are provided
+  const hooks = {
+    '궁금증 유발 Curiosity': [`"${topic}" — 아무도 안 알려주는 진짜 이야기`,`${topic} 이렇게 하면 결과가 완전 달라요`,`${topic}에 대해 여러분이 모르는 3가지`],
+    '공감 Relatability': [`${topic} 해본 사람만 아는 그 느낌...`,`솔직히 ${topic} 이거 나만 그런 거 아니죠?`,`${topic} — 공감 100% 보장합니다`],
+    '놀라움 Surprise': [`${topic} — 이건 진짜 예상 못 했어요`,`${topic} 했는데 결과가 미쳤습니다`,`이게 가능하다고? ${topic}의 반전`],
+    'FOMO': [`${topic} — 지금 안 하면 후회할 거예요`,`다들 ${topic} 하고 있는데 아직도 안 해봤어요?`,`${topic} 트렌드, 놓치면 안 되는 이유`],
+    '영감 Inspiration': [`${topic}이(가) 제 인생을 바꿨어요`,`${topic}에서 찾은 영감 한 조각`,`왜 ${topic}을(를) 시작해야 하는지`],
+  };
+
+  let body, ssAnalysis = '';
+  if (hasScreenshots) {
+    ssAnalysis = `\n\n📸 캡쳐 분석 기반 (${ssCount}장 참고):\n`;
+    if (ssCount === 1) {
+      body = `[캡쳐 1장 기반 분석]\n1. 오프닝 (0-3초): 캡쳐 속 핵심 비주얼과 동일한 앵글로 시작 — 시선 고정\n2. 컨텍스트 (3-8초): "${topic}" 관련 상황 설명, 자막 오버레이 활용\n3. 핵심 장면 (8-20초): 캡쳐 속 구도를 참고하여 메인 콘텐츠 전개\n4. 반전/클라이막스 (20-25초): 예상치 못한 디테일 또는 결과 공개\n5. 마무리 (25-30초): CTA와 함께 브랜딩 요소 노출`;
+    } else if (ssCount <= 3) {
+      body = `[캡쳐 ${ssCount}장 기반 시퀀스 분석]\n1. 인트로 씬 (캡쳐1 참고): 첫 장면의 구도와 분위기를 살려 훅 연출\n2. 전개 (캡쳐2 참고): ${topic} 관련 핵심 정보를 비주얼과 함께 전달\n${ssCount >= 3 ? `3. 클라이막스 (캡쳐3 참고): 하이라이트 장면 — 감정 최고조\n` : ''}4. 비하인드/개인 의견: 솔직한 리액션과 추천 포인트\n5. 아웃트로: 다음 콘텐츠 예고 + CTA`;
+    } else {
+      body = `[캡쳐 ${ssCount}장 기반 풀 스토리보드]\n1. 씬 1 — 오프닝 (캡쳐1): 강렬한 첫 인상, 훅과 동시 시작\n2. 씬 2 — 도입 (캡쳐2): ${topic} 배경 설명, 왜 이걸 다루는지\n3. 씬 3-${Math.min(ssCount-1, 5)} — 메인 (캡쳐3~${Math.min(ssCount-1, 5)}): 핵심 콘텐츠 전개\n   - 각 캡쳐의 구도와 전환 리듬 참고\n   - B-roll과 자막 교차 편집\n4. 씬 ${Math.min(ssCount, 6)} — 마무리 (캡쳐${ssCount}): 요약 + 감성적 마무리\n5. CTA 카드: 팔로우/구독/저장 유도`;
+    }
+    ssAnalysis += `→ ${ssCount}장의 캡쳐 화면에서 구도, 전환 흐름, 비주얼 패턴을 분석하여 구조를 생성했습니다.`;
+    body += ssAnalysis;
+  } else {
+    const bodies = [
+      `1. 배경 설명: ${topic}을(를) 시작하게 된 계기나 상황을 자연스럽게 설명\n2. 핵심 내용: 구체적인 정보, 경험, 또는 비하인드 공유\n3. 전환점: 놀라운 발견이나 깨달음의 순간\n4. 가치 전달: 시청자가 얻어갈 수 있는 인사이트`,
+      `1. 현재 상황 소개: ${topic} 관련 최신 트렌드나 현장 분위기\n2. 디테일 공유: 감각적인 묘사와 구체적인 팁\n3. 개인적 의견: 솔직한 리뷰나 추천 포인트\n4. 비교/대조: 다른 옵션과의 차이점 또는 업그레이드된 점`,
+    ];
+    body = bodies[Math.floor(Math.random() * bodies.length)];
+  }
+
+  const ctas = [
+    `"${topic} 관련 더 궁금한 거 있으면 댓글로 알려주세요! 팔로우하면 이런 콘텐츠 매일 볼 수 있어요 ✦"`,
+    `"이 영상이 도움이 됐다면 저장하고 친구에게 공유해주세요! 다음에는 더 깊은 이야기 가져올게요 🤍"`,
+    `"여러분의 ${topic} 경험도 궁금해요! 댓글로 공유해주세요. 좋아요는 큰 힘이 됩니다 ✦"`,
+  ];
+
+  const hook = (hooks[emotion] || hooks['궁금증 유발 Curiosity'])[Math.floor(Math.random() * 3)];
+  const cta = ctas[Math.floor(Math.random() * ctas.length)];
+  const script = { id: 's' + Date.now(), topic, type, emotion, hook, body, cta, date: fmt(new Date()), screenshots: [...window._scriptScreenshots] };
+
+  document.getElementById('script-result').innerHTML = `
+    <div class="card" style="margin-top:16px">
+      <div class="card-header">
+        <div>
+          <div class="card-title">생성된 구조 — ${esc(type)}</div>
+          ${hasScreenshots ? `<div class="section-sub" style="color:var(--success)">📸 캡쳐 ${ssCount}장 기반 분석 적용됨</div>` : ''}
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="saveScript()">저장하기</button>
+      </div>
+      <div class="script-block"><div class="script-label">🎣 Hook 훅</div><div class="script-text">${esc(hook)}</div></div>
+      <div class="script-block"><div class="script-label">📖 Body 본문</div><div class="script-text">${esc(body)}</div></div>
+      <div class="script-block"><div class="script-label">🎯 CTA 콜투액션</div><div class="script-text">${esc(cta)}</div></div>
+    </div>`;
+
+  window._pendingScript = script;
+}
+
+function saveScript() {
+  if (window._pendingScript) {
+    S.scripts.unshift(window._pendingScript);
+    save('scripts', S.scripts);
+    window._pendingScript = null;
+    window._scriptScreenshots = [];
+    renderMain();
+  }
+}
+
+function deleteScript(id) { S.scripts = S.scripts.filter(s => s.id !== id); save('scripts', S.scripts); renderMain(); }
+
+// ─── Gmail Integration ───
+function openGmail(to, subject, body) {
+  const s = encodeURIComponent(subject);
+  const b = encodeURIComponent(body);
+  const t = encodeURIComponent(to);
+  window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${t}&su=${s}&body=${b}&from=${encodeURIComponent(GMAIL)}`, '_blank');
+}
+
+function openGmailTemplate(templateKey, brand, toEmail) {
+  const tpl = EMAIL_TEMPLATES[templateKey];
+  if (!tpl) return;
+  const subject = tpl.subject.replace(/\{\{brand\}\}/g, brand);
+  const body = tpl.body.replace(/\{\{brand\}\}/g, brand);
+  openGmail(toEmail || '', subject, body);
+}
+
+function openEmailComposer(brandName, toEmail, context) {
+  const tplKeys = context === 'deal'
+    ? ['deal_confirm', 'deal_delivery', 'followup']
+    : ['outreach_kr', 'outreach_en', 'followup'];
+
+  const tplButtons = tplKeys.map(k => {
+    const tpl = EMAIL_TEMPLATES[k];
+    return `<button class="btn btn-outline btn-sm" style="text-align:left;padding:10px 14px" onclick="openGmailTemplate('${k}','${esc(brandName)}','${esc(toEmail)}');logEmail('${esc(brandName)}','${k}');closeModal()">
+      <div style="font-weight:600;margin-bottom:2px">${tpl.name}</div>
+      <div style="font-size:10px;color:var(--text3)">${esc(tpl.subject.replace(/\{\{brand\}\}/g, brandName).substring(0,50))}...</div>
+    </button>`;
+  }).join('');
+
+  showModal(`
+    <div class="modal-title">📧 ${esc(brandName)} 이메일 보내기</div>
+    <div class="gmail-bar">
+      <span class="gmail-icon">📧</span>
+      <span>From:</span>
+      <span class="gmail-email">${GMAIL}</span>
+    </div>
+    <div class="form-group"><label>받는 사람</label><input id="email-to" value="${esc(toEmail || '')}" placeholder="이메일 주소..."></div>
+    <div style="font-size:11px;color:var(--text3);letter-spacing:1px;margin-bottom:10px">템플릿 선택</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">${tplButtons}</div>
+    <div class="gold-line"></div>
+    <div class="form-group"><label>직접 작성</label>
+      <input id="email-subject" placeholder="제목..." style="margin-bottom:8px">
+      <textarea id="email-body" rows="5" placeholder="내용..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-gold" onclick="sendCustomEmail('${esc(brandName)}')">Gmail에서 보내기</button>
+    </div>
+  `);
+}
+
+function sendCustomEmail(brand) {
+  const to = document.getElementById('email-to').value.trim();
+  const subject = document.getElementById('email-subject').value.trim();
+  const body = document.getElementById('email-body').value.trim();
+  if (!subject && !body) return;
+  openGmail(to, subject, body);
+  logEmail(brand, 'custom');
+  closeModal();
+}
+
+function logEmail(brand, type) {
+  const logs = JSON.parse(localStorage.getItem('ihq_email_logs') || '[]');
+  logs.unshift({ brand, type, date: fmt(new Date()), time: new Date().toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'}) });
+  if (logs.length > 200) logs.length = 200;
+  localStorage.setItem('ihq_email_logs', JSON.stringify(logs));
+}
+
+function getEmailLogs(brand) {
+  const logs = JSON.parse(localStorage.getItem('ihq_email_logs') || '[]');
+  return logs.filter(l => l.brand === brand);
+}
+
+function getEmailLogLabel(type) {
+  const labels = { outreach_kr: '아웃리치', outreach_en: 'Outreach', followup: '팔로업', deal_confirm: '딜 확인', deal_delivery: '납품', custom: '직접 발송' };
+  return labels[type] || type;
+}
+
+function getEmailLogClass(type) {
+  if (type.includes('outreach')) return 'log-sent';
+  if (type === 'followup') return 'log-follow';
+  return 'log-reply';
+}
+
+function renderGmailBar() {
+  const logs = JSON.parse(localStorage.getItem('ihq_email_logs') || '[]');
+  return `<div class="gmail-bar">
+    <span class="gmail-icon">📧</span>
+    <span style="color:var(--text2)">Gmail 연동</span>
+    <span class="gmail-email">${GMAIL}</span>
+    <span class="gmail-status">● 연결됨 &middot; ${logs.length}건 발송</span>
+  </div>`;
+}
+
+// ─── CRM (with Korean brand DB + category filters + Gmail) ───
+function renderCRM() {
+  const statusGroups = { outreach: '연락 예정', contacted: '연락 완료', negotiating: '협상중', active: '협업중', completed: '완료' };
+  const statusBadge = { outreach: 'badge-neutral', contacted: 'badge-warn', negotiating: 'badge-gold', active: 'badge-success', completed: 'badge-success' };
+  const categoryLabels = { all: '전체 All', beauty: '뷰티 Beauty', fashion: '패션 Fashion', interior: '인테리어 Interior', other: '기타 Other' };
+
+  const filtered = S.crmFilter === 'all' ? S.contacts : S.contacts.filter(c => c.category === S.crmFilter);
+
+  let filters = `<div class="crm-filter">
+    ${Object.entries(categoryLabels).map(([k, v]) =>
+      `<button class="${S.crmFilter === k ? 'active' : ''}" onclick="S.crmFilter='${k}';renderMain()">${v} (${k === 'all' ? S.contacts.length : S.contacts.filter(c=>c.category===k).length})</button>`
+    ).join('')}
+  </div>`;
+
+  let cards = filtered.length ? `<div class="grid-2">${filtered.map(c => {
+    const emailLogs = getEmailLogs(c.brand);
+    const hasEmail = c.contact && c.contact.includes('@');
+    const lastLog = emailLogs.length ? emailLogs[0] : null;
+    return `
+    <div class="crm-card">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div>
+          ${c.category ? `<div class="crm-category">${categoryLabels[c.category] || c.category}</div>` : ''}
+          <h3>${esc(c.brand)}</h3>
+          <div class="crm-contact">${esc(c.contact || '연락처 없음')}</div>
+        </div>
+        <span class="badge ${statusBadge[c.status]||'badge-neutral'}">${statusGroups[c.status]||c.status}</span>
+      </div>
+      ${c.platform ? `<div style="font-size:11px;color:var(--text3)">플랫폼: ${esc(c.platform)}</div>` : ''}
+      ${lastLog ? `<div style="font-size:10px;color:var(--text3);margin-top:4px">📧 최근: ${lastLog.date} ${getEmailLogLabel(lastLog.type)}</div>` : ''}
+      ${c.notes ? `<div class="crm-notes">${esc(c.notes)}</div>` : ''}
+      ${emailLogs.length > 1 ? `<div class="email-log">${emailLogs.slice(0,3).map(l => `<div class="email-log-item"><span class="log-date">${l.date}</span><span class="log-type ${getEmailLogClass(l.type)}">${getEmailLogLabel(l.type)}</span><span>${l.time||''}</span></div>`).join('')}${emailLogs.length > 3 ? `<div style="font-size:9px;color:var(--text3)">+${emailLogs.length-3}건 더</div>` : ''}</div>` : ''}
+      <div class="crm-actions">
+        <button class="btn-gmail" onclick="openEmailComposer('${esc(c.brand)}','${esc(c.contact||'')}','crm')">📧 이메일</button>
+        <button class="btn btn-outline btn-sm" onclick="editContact('${c.id}')">수정</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteContact('${c.id}')">삭제</button>
+      </div>
+    </div>`;
+  }).join('')}</div>` : '<div class="empty"><div class="empty-icon">✦</div>해당 카테고리에 브랜드가 없습니다</div>';
+
+  return `
+    <div class="section-header">
+      <div><div class="section-title">Brand Outreach CRM</div><div class="section-sub">브랜드 아웃리치 관리 — ${S.contacts.length}개 브랜드</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="loadBrandDB()">DB 불러오기</button>
+        <button class="btn btn-gold btn-sm" onclick="openContactModal()">+ 브랜드 추가</button>
+      </div>
+    </div>
+    ${renderGmailBar()}
+    ${filters}
+    ${cards}`;
+}
+
+function loadBrandDB() {
+  const existing = new Set(S.contacts.map(c => c.brand));
+  let added = 0;
+  BRAND_DB.forEach((b, i) => {
+    if (!existing.has(b.brand)) {
+      S.contacts.push({ ...b, id: 'c' + (Date.now() + i) });
+      added++;
+    }
+  });
+  if (added) { save('contacts', S.contacts); renderMain(); }
+  showModal(`<div class="modal-title">브랜드 DB</div><p style="color:var(--text2);font-size:13px">${added ? `${added}개의 새 브랜드가 추가되었습니다.` : '이미 모든 브랜드가 등록되어 있습니다.'}</p><div class="modal-actions"><button class="btn btn-gold" onclick="closeModal()">확인</button></div>`);
+}
+
+function openContactModal(contact) {
+  const c = contact || { brand:'', contact:'', platform:'', status:'outreach', category:'other', notes:'' };
+  const isEdit = !!contact;
+  showModal(`
+    <div class="modal-title">${isEdit ? '브랜드 수정' : '브랜드 추가'}</div>
+    <div class="form-group"><label>브랜드 / 회사명</label><input id="ct-brand" value="${esc(c.brand)}"></div>
+    <div class="form-group"><label>담당자 / 연락처</label><input id="ct-contact" value="${esc(c.contact||'')}" placeholder="이메일, 전화번호, DM..."></div>
+    <div class="form-row">
+      <div class="form-group"><label>플랫폼</label><input id="ct-platform" value="${esc(c.platform||'')}" placeholder="Instagram, YouTube..."></div>
+      <div class="form-group"><label>카테고리</label><select id="ct-category">
+        <option value="beauty" ${c.category==='beauty'?'selected':''}>뷰티 Beauty</option>
+        <option value="fashion" ${c.category==='fashion'?'selected':''}>패션 Fashion</option>
+        <option value="interior" ${c.category==='interior'?'selected':''}>인테리어 Interior</option>
+        <option value="other" ${c.category==='other'||!c.category?'selected':''}>기타 Other</option>
+      </select></div>
+    </div>
+    <div class="form-group"><label>상태</label><select id="ct-status">
+      <option value="outreach" ${c.status==='outreach'?'selected':''}>연락 예정</option>
+      <option value="contacted" ${c.status==='contacted'?'selected':''}>연락 완료</option>
+      <option value="negotiating" ${c.status==='negotiating'?'selected':''}>협상중</option>
+      <option value="active" ${c.status==='active'?'selected':''}>협업중</option>
+      <option value="completed" ${c.status==='completed'?'selected':''}>완료</option>
+    </select></div>
+    <div class="form-group"><label>메모</label><textarea id="ct-notes" rows="3">${esc(c.notes||'')}</textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-gold" onclick="${isEdit ? `updateContact('${c.id}')` : 'saveContact()'}">${isEdit ? '저장' : '추가'}</button>
+    </div>`);
+}
+
+function saveContact() {
+  const c = {
+    id: 'c' + Date.now(),
+    brand: document.getElementById('ct-brand').value.trim(),
+    contact: document.getElementById('ct-contact').value.trim(),
+    platform: document.getElementById('ct-platform').value.trim(),
+    category: document.getElementById('ct-category').value,
+    status: document.getElementById('ct-status').value,
+    notes: document.getElementById('ct-notes').value.trim(),
+  };
+  if (!c.brand) return;
+  S.contacts.push(c); save('contacts', S.contacts); closeModal(); renderMain();
+}
+
+function editContact(id) { openContactModal(S.contacts.find(c => c.id === id)); }
+
+function updateContact(id) {
+  const c = S.contacts.find(x => x.id === id);
+  c.brand = document.getElementById('ct-brand').value.trim();
+  c.contact = document.getElementById('ct-contact').value.trim();
+  c.platform = document.getElementById('ct-platform').value.trim();
+  c.category = document.getElementById('ct-category').value;
+  c.status = document.getElementById('ct-status').value;
+  c.notes = document.getElementById('ct-notes').value.trim();
+  save('contacts', S.contacts); closeModal(); renderMain();
+}
+
+function deleteContact(id) { S.contacts = S.contacts.filter(c => c.id !== id); save('contacts', S.contacts); renderMain(); }
+
+// ─── Thumbnail Maker ───
+// Font loading for Pinyon Script (Google Fonts loaded via <link>)
+// 210 디딤명조 is a local Korean font — fallback to serif if not installed
+const FONT_SCRIPT = "'Pinyon Script', cursive";
+const FONT_KR = "'210 디딤명조', '210DiDimMyeongjo', 'Noto Serif KR', serif";
+const FONT_CAPS = "'SF Pro Display', -apple-system, 'Helvetica Neue', sans-serif";
+
+const THUMB_SIZES = {
+  igstory: { w: 1080, h: 1920, label: 'Story/Reels (1080x1920)' },
+  yt: { w: 1280, h: 720, label: 'YouTube (1280x720)' },
+  ig: { w: 1080, h: 1080, label: 'Instagram (1080x1080)' },
+  blog: { w: 1200, h: 628, label: 'Blog/OG (1200x628)' },
+};
+
+const THUMB_TEMPLATES = [
+  { id: 'krystal', name: '크리스탈 시그니처', desc: 'Signature', apply: t => { t.scriptText='Tips from'; t.capsText='NEW YORK'; t.krText='뉴욕 예술경영에서 배운 현명한 소비 법'; t.titleColor='#ffffff'; t.capsColor='#ffffff'; t.krColor='#ffffff'; t.overlay=0.15; t.gradientStrength=0.7; t.bg='#1a1a1a'; t.scriptSize=72; t.capsSize=18; t.krSize=24; t.scriptX=50;t.scriptY=55;t.capsX=50;t.capsY=62;t.krX=50;t.krY=72; t.titleStroke=false; t.accentColor='#ffffff'; }},
+  { id: 'journal', name: '저널 일상', desc: 'Journal', apply: t => { t.scriptText='Journal'; t.capsText='9-3 CORPORATE LIFE'; t.krText='98년생 공간기획자 9-3 출퇴근'; t.titleColor='#ffffff'; t.capsColor='#ffffff'; t.krColor='#ffffff'; t.overlay=0.1; t.gradientStrength=0.65; t.bg='#111'; t.scriptSize=80; t.capsSize=16; t.krSize=22; t.scriptX=50;t.scriptY=52;t.capsX=50;t.capsY=60;t.krX=50;t.krY=70; t.titleStroke=false; t.accentColor='#ffffff'; }},
+  { id: 'gallery', name: '갤러리 투어', desc: 'Gallery', apply: t => { t.scriptText='Art & Life'; t.capsText='GALLERY TOUR'; t.krText='이번 주 꼭 가야 할 전시'; t.titleColor='#f5e6d0'; t.capsColor='#c4a265'; t.krColor='#ffffff'; t.overlay=0.2; t.gradientStrength=0.75; t.bg='#0a0a0a'; t.scriptSize=68; t.capsSize=18; t.krSize=24; t.scriptX=50;t.scriptY=55;t.capsX=50;t.capsY=62;t.krX=50;t.krY=72; t.titleStroke=false; t.accentColor='#c4a265'; }},
+  { id: 'minimal', name: '미니멀 화이트', desc: 'Minimal', apply: t => { t.scriptText='from Krystal'; t.capsText='DAILY LIFE'; t.krText='나의 하루 기록'; t.titleColor='#ffffff'; t.capsColor='#e0e0e0'; t.krColor='#cccccc'; t.overlay=0.25; t.gradientStrength=0.5; t.bg='#000'; t.scriptSize=60; t.capsSize=14; t.krSize=20; t.scriptX=50;t.scriptY=58;t.capsX=50;t.capsY=65;t.krX=50;t.krY=74; t.titleStroke=false; t.accentColor='#ffffff'; }},
+  { id: 'luxury', name: '럭셔리 골드', desc: 'Luxury', apply: t => { t.scriptText='Curated Life'; t.capsText='LIFESTYLE & BEAUTY'; t.krText='감각적인 삶의 큐레이션'; t.titleColor='#c4a265'; t.capsColor='#c4a265'; t.krColor='#f5e6d0'; t.overlay=0.35; t.gradientStrength=0.7; t.bg='#0a0806'; t.scriptSize=66; t.capsSize=16; t.krSize=22; t.scriptX=50;t.scriptY=52;t.capsX=50;t.capsY=59;t.krX=50;t.krY=68; t.titleStroke=false; t.accentColor='#c4a265'; }},
+  { id: 'vlog', name: '브이로그', desc: 'Vlog', apply: t => { t.scriptText='Vlog'; t.capsText='SEOUL CITY LIFE'; t.krText='서울 일상 브이로그'; t.titleColor='#ffffff'; t.capsColor='#ffffff'; t.krColor='#ffffff'; t.overlay=0.1; t.gradientStrength=0.8; t.bg='#111'; t.scriptSize=90; t.capsSize=20; t.krSize=26; t.scriptX=50;t.scriptY=50;t.capsX=50;t.capsY=58;t.krX=50;t.krY=68; t.titleStroke=true; t.titleStrokeColor='rgba(0,0,0,0.5)'; t.accentColor='#ffffff'; }},
+  { id: 'review', name: '리뷰 / 추천', desc: 'Review', apply: t => { t.scriptText='Must Have'; t.capsText='HONEST REVIEW'; t.krText='솔직 리뷰 & 추천'; t.titleColor='#ffffff'; t.capsColor='#ff6b6b'; t.krColor='#ffffff'; t.overlay=0.3; t.gradientStrength=0.7; t.bg='#0a0a0a'; t.scriptSize=64; t.capsSize=18; t.krSize=24; t.scriptX=50;t.scriptY=55;t.capsX=50;t.capsY=62;t.krX=50;t.krY=72; t.titleStroke=true; t.titleStrokeColor='rgba(0,0,0,0.6)'; t.accentColor='#ff6b6b'; }},
+  { id: 'cafe', name: '카페 / 맛집', desc: 'Cafe', apply: t => { t.scriptText='Cafe Hopping'; t.capsText='HIDDEN GEMS IN SEOUL'; t.krText='서울 숨은 카페 모음'; t.titleColor='#f5e6d0'; t.capsColor='#d4956a'; t.krColor='#f5e6d0'; t.overlay=0.2; t.gradientStrength=0.65; t.bg='#1a140e'; t.scriptSize=62; t.capsSize=14; t.krSize=22; t.scriptX=50;t.scriptY=55;t.capsX=50;t.capsY=62;t.krX=50;t.krY=72; t.titleStroke=false; t.accentColor='#d4956a'; }},
+  { id: 'dark', name: '다크 시네마', desc: 'Cinema', apply: t => { t.scriptText='Behind the Scene'; t.capsText='CINEMATIC VLOG'; t.krText='시네마틱 일상 기록'; t.titleColor='#e0e0e0'; t.capsColor='#888888'; t.krColor='#aaaaaa'; t.overlay=0.45; t.gradientStrength=0.8; t.bg='#000000'; t.scriptSize=58; t.capsSize=16; t.krSize=20; t.scriptX=50;t.scriptY=55;t.capsX=50;t.capsY=62;t.krX=50;t.krY=72; t.titleStroke=false; t.accentColor='#888888'; }},
+];
+
+const ACCENT_COLORS = ['#c4a265','#ffffff','#ff4444','#00ffcc','#ff6ec7','#ffff00','#4a90d9','#8b6b5a','#d4956a','#44aa77','#a855f7','#f97316'];
+
+function renderThumbnail() {
+  const t = S.thumb;
+  const sz = THUMB_SIZES[t.size] || THUMB_SIZES.igstory;
+  const maxH = window.innerHeight - 220;
+  const scale = Math.min(380 / sz.w, maxH / sz.h);
+  const cw = Math.round(sz.w * scale), ch = Math.round(sz.h * scale);
+
+  const templates = THUMB_TEMPLATES.map(tp =>
+    `<div class="thumb-tpl ${t.template===tp.id?'active':''}" onclick="applyThumbTemplate('${tp.id}')">
+      <span>${tp.name}</span>
+    </div>`
+  ).join('');
+
+  const savedThumbs = S.thumbs.length ? `
+    <div class="gold-line"></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;letter-spacing:1px">저장된 썸네일 (${S.thumbs.length})</div>
+    <div class="thumb-saved-grid">
+      ${S.thumbs.map((th, i) => `
+        <div class="thumb-saved-item">
+          <img src="${th.preview}" alt="${esc(th.name)}">
+          <div class="thumb-saved-name">${esc(th.name)}</div>
+          <div class="thumb-saved-del" onclick="event.stopPropagation();deleteThumb(${i})">✕</div>
+        </div>
+      `).join('')}
+    </div>` : '';
+
+  const editor = `
+    <div class="card" style="padding:14px">
+      <div class="card-title" style="margin-bottom:12px">썸네일 디자인</div>
+
+      <div class="form-group"><label>사이즈</label><select id="th-size" onchange="S.thumb.size=this.value;renderMain()">
+        ${Object.entries(THUMB_SIZES).map(([k,v]) => `<option value="${k}" ${t.size===k?'selected':''}>${v.label}</option>`).join('')}
+      </select></div>
+
+      <div style="font-size:11px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">템플릿 TEMPLATES</div>
+      <div class="thumb-templates">${templates}</div>
+
+      <div class="form-group">
+        <label>배경 사진</label>
+        <div class="file-drop ${t.bgImage?'has-file':''}" onclick="document.getElementById('th-bg-input').click()">
+          ${t.bgImage ? '🖼 사진 적용됨 (클릭하여 변경)' : '클릭하여 본인 사진 업로드'}
+        </div>
+        <input type="file" id="th-bg-input" accept="image/*" style="display:none" onchange="handleThumbBg(this)">
+        ${t.bgImage ? `<button class="btn btn-danger btn-sm" style="margin-top:4px" onclick="S.thumb.bgImage=null;_thumbBgImg=null;renderMain()">사진 제거</button>` : ''}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group"><label>배경색</label><input type="color" id="th-bg-color" value="${t.bg}" oninput="S.thumb.bg=this.value;drawThumb()" style="height:32px;padding:2px"></div>
+        <div class="form-group"><label>오버레이 ${Math.round(t.overlay*100)}%</label><input type="range" min="0" max="0.8" step="0.05" value="${t.overlay}" oninput="S.thumb.overlay=parseFloat(this.value);drawThumb()" style="width:100%"></div>
+      </div>
+
+      <div class="form-group"><label>그라데이션 ${Math.round((t.gradientStrength||0.7)*100)}%</label><input type="range" min="0" max="1" step="0.05" value="${t.gradientStrength||0.7}" oninput="S.thumb.gradientStrength=parseFloat(this.value);drawThumb()" style="width:100%"></div>
+
+      <div class="gold-line"></div>
+      <div style="font-size:11px;color:var(--gold);letter-spacing:1px;margin-bottom:10px">TEXT LAYERS (Pinyon Script + 디딤명조)</div>
+
+      <div class="form-group"><label>영문 스크립트 (Pinyon Script)</label><input id="th-script" value="${esc(t.scriptText)}" oninput="S.thumb.scriptText=this.value;drawThumb()" placeholder="e.g. Tips from, Journal..." style="font-family:'Pinyon Script',cursive;font-size:18px"></div>
+      <div class="form-row">
+        <div class="form-group"><label>색상</label><input type="color" value="${t.titleColor}" oninput="S.thumb.titleColor=this.value;drawThumb()" style="height:28px;padding:2px"></div>
+        <div class="form-group"><label>크기 ${t.scriptSize}px</label><input type="range" min="30" max="120" value="${t.scriptSize}" oninput="S.thumb.scriptSize=parseInt(this.value);drawThumb()" style="width:100%"></div>
+      </div>
+
+      <div class="form-group"><label>영문 캡스 (UPPERCASE)</label><input id="th-caps" value="${esc(t.capsText)}" oninput="S.thumb.capsText=this.value;drawThumb()" placeholder="e.g. NEW YORK, CORPORATE LIFE..." style="letter-spacing:3px;text-transform:uppercase;font-size:12px"></div>
+      <div class="form-row">
+        <div class="form-group"><label>색상</label><input type="color" value="${t.capsColor||'#ffffff'}" oninput="S.thumb.capsColor=this.value;drawThumb()" style="height:28px;padding:2px"></div>
+        <div class="form-group"><label>크기 ${t.capsSize}px</label><input type="range" min="10" max="40" value="${t.capsSize}" oninput="S.thumb.capsSize=parseInt(this.value);drawThumb()" style="width:100%"></div>
+      </div>
+
+      <div class="form-group"><label>한글 서브타이틀 (210 디딤명조)</label><input id="th-kr" value="${esc(t.krText)}" oninput="S.thumb.krText=this.value;drawThumb()" placeholder="e.g. 뉴욕 예술경영에서 배운 현명한 소비 법" style="font-size:14px"></div>
+      <div class="form-row">
+        <div class="form-group"><label>색상</label><input type="color" value="${t.krColor||'#ffffff'}" oninput="S.thumb.krColor=this.value;drawThumb()" style="height:28px;padding:2px"></div>
+        <div class="form-group"><label>크기 ${t.krSize}px</label><input type="range" min="14" max="48" value="${t.krSize}" oninput="S.thumb.krSize=parseInt(this.value);drawThumb()" style="width:100%"></div>
+      </div>
+
+      <div style="padding:8px 10px;background:var(--gold-glow);border:1px solid var(--gold-dim);border-radius:6px;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--gold);letter-spacing:1px">DRAG TO MOVE</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">캔버스에서 각 텍스트를 드래그하여 위치를 조정하세요</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:8px">
+        <label><input type="checkbox" ${t.titleStroke?'checked':''} onchange="S.thumb.titleStroke=this.checked;drawThumb()" style="width:auto;margin-right:6px">텍스트 그림자</label>
+      </div>
+
+      <div class="gold-line"></div>
+
+      <div class="form-group"><label>배지 (좌상단)</label><input value="${esc(t.badge)}" oninput="S.thumb.badge=this.value;drawThumb()" placeholder="e.g. VLOG, EP.01..."></div>
+
+      <div class="form-group">
+        <label>액센트 컬러</label>
+        <div class="color-swatches">
+          ${ACCENT_COLORS.map(c => `<div class="color-swatch ${t.accentColor===c?'active':''}" style="background:${c}" onclick="S.thumb.accentColor='${c}';S.thumb.capsColor='${c}';S.thumb.badgeColor='${c}';drawThumb();renderMain()"></div>`).join('')}
+        </div>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn btn-gold" onclick="downloadThumb()">PNG 다운로드</button>
+        <button class="btn btn-outline btn-sm" onclick="saveThumb()">저장하기</button>
+        <button class="btn btn-outline btn-sm" onclick="resetThumb()">초기화</button>
+      </div>
+    </div>
+    ${savedThumbs}`;
+
+  return `<div class="thumb-workspace">
+    <div class="thumb-preview">
+      <div class="thumb-canvas-wrap"><canvas class="thumb-canvas" id="thumbCanvas" width="${cw}" height="${ch}"></canvas></div>
+      <div style="font-size:11px;color:var(--text3)">${sz.label} &middot; Scale ${Math.round(scale*100)}%</div>
+    </div>
+    <div class="thumb-editor">${editor}</div>
+  </div>`;
+}
+
+let _thumbBgImg = null;
+let _thumbHitAreas = [];
+let _dragLayer = null;
+let _dragStartMouse = null;
+let _dragStartPos = null;
+
+function initThumbCanvas() {
+  if (S.thumb.bgImage && !_thumbBgImg) {
+    _thumbBgImg = new Image();
+    _thumbBgImg.onload = () => drawThumb();
+    _thumbBgImg.src = S.thumb.bgImage;
+  } else {
+    drawThumb();
+  }
+  // Attach drag events
+  const canvas = document.getElementById('thumbCanvas');
+  if (!canvas) return;
+  canvas.style.cursor = 'default';
+  canvas.onmousedown = thumbMouseDown;
+  canvas.onmousemove = thumbMouseMove;
+  canvas.onmouseup = thumbMouseUp;
+  canvas.onmouseleave = thumbMouseUp;
+  // Touch support
+  canvas.ontouchstart = e => { e.preventDefault(); const touch = e.touches[0]; thumbMouseDown({ offsetX: touch.clientX - canvas.getBoundingClientRect().left, offsetY: touch.clientY - canvas.getBoundingClientRect().top }); };
+  canvas.ontouchmove = e => { e.preventDefault(); const touch = e.touches[0]; thumbMouseMove({ offsetX: touch.clientX - canvas.getBoundingClientRect().left, offsetY: touch.clientY - canvas.getBoundingClientRect().top, buttons: 1 }); };
+  canvas.ontouchend = thumbMouseUp;
+}
+
+function thumbMouseDown(e) {
+  const mx = e.offsetX, my = e.offsetY;
+  // Check hit areas in reverse (top layer first)
+  for (let i = _thumbHitAreas.length - 1; i >= 0; i--) {
+    const ha = _thumbHitAreas[i];
+    const pad = 10;
+    if (mx >= ha.x - pad && mx <= ha.x + ha.w + pad && my >= ha.y - pad && my <= ha.y + ha.h + pad) {
+      _dragLayer = ha.layer;
+      _dragStartMouse = { x: mx, y: my };
+      _dragStartPos = { x: S.thumb[ha.xKey], y: S.thumb[ha.yKey] };
+      const canvas = document.getElementById('thumbCanvas');
+      if (canvas) canvas.style.cursor = 'grabbing';
+      drawThumb(); // Show selection
+      return;
+    }
+  }
+  _dragLayer = null;
+  drawThumb();
+}
+
+function thumbMouseMove(e) {
+  const canvas = document.getElementById('thumbCanvas');
+  if (!canvas) return;
+  const mx = e.offsetX, my = e.offsetY;
+
+  if (_dragLayer && _dragStartMouse && (e.buttons === 1 || e.buttons === undefined)) {
+    const dx = mx - _dragStartMouse.x;
+    const dy = my - _dragStartMouse.y;
+    const ha = _thumbHitAreas.find(h => h.layer === _dragLayer);
+    if (ha) {
+      S.thumb[ha.xKey] = Math.max(5, Math.min(95, _dragStartPos.x + (dx / canvas.width) * 100));
+      S.thumb[ha.yKey] = Math.max(5, Math.min(95, _dragStartPos.y + (dy / canvas.height) * 100));
+      drawThumb();
+    }
+    return;
+  }
+
+  // Hover cursor
+  let hovering = false;
+  for (const ha of _thumbHitAreas) {
+    const pad = 10;
+    if (mx >= ha.x - pad && mx <= ha.x + ha.w + pad && my >= ha.y - pad && my <= ha.y + ha.h + pad) {
+      hovering = true; break;
+    }
+  }
+  canvas.style.cursor = hovering ? 'grab' : 'default';
+}
+
+function thumbMouseUp() {
+  if (_dragLayer) {
+    const canvas = document.getElementById('thumbCanvas');
+    if (canvas) canvas.style.cursor = 'default';
+    _dragLayer = null;
+    _dragStartMouse = null;
+    _dragStartPos = null;
+    drawThumb();
+  }
+}
+
+function _drawThumbToCtx(ctx, cw, ch, scale) {
+  const t = S.thumb;
+
+  // Background
+  ctx.fillStyle = t.bg;
+  ctx.fillRect(0, 0, cw, ch);
+
+  // Background image
+  if (_thumbBgImg && _thumbBgImg.complete && t.bgImage) {
+    const imgScale = Math.max(cw / _thumbBgImg.width, ch / _thumbBgImg.height);
+    const iw = _thumbBgImg.width * imgScale, ih = _thumbBgImg.height * imgScale;
+    ctx.drawImage(_thumbBgImg, (cw - iw)/2, (ch - ih)/2, iw, ih);
+  }
+
+  // Dark overlay
+  if (t.overlay > 0) {
+    ctx.fillStyle = `rgba(0,0,0,${t.overlay})`;
+    ctx.fillRect(0, 0, cw, ch);
+  }
+
+  // Bottom gradient (Krystal signature style)
+  const gs = t.gradientStrength || 0.7;
+  const grad = ctx.createLinearGradient(0, ch * 0.35, 0, ch);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(0.5, `rgba(0,0,0,${gs * 0.3})`);
+  grad.addColorStop(1, `rgba(0,0,0,${gs})`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, cw, ch);
+
+  // Badge (top-left)
+  if (t.badge) {
+    const bfs = 13 * scale;
+    ctx.font = `600 ${bfs}px ${FONT_CAPS}`;
+    const bw = ctx.measureText(t.badge).width + 18 * scale;
+    const bh = bfs + 12 * scale;
+    const bx = 16 * scale, by = 16 * scale;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    roundRect(ctx, bx, by, bw, bh, 4 * scale); ctx.fill();
+    ctx.fillStyle = t.badgeColor || '#ffffff';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(t.badge, bx + 9 * scale, by + bh/2);
+  }
+
+  // === 3-LAYER TEXT SYSTEM (draggable) ===
+  // Ensure defaults exist
+  if (t.scriptX === undefined) t.scriptX = 50;
+  if (t.scriptY === undefined) t.scriptY = 55;
+  if (t.capsX === undefined) t.capsX = 50;
+  if (t.capsY === undefined) t.capsY = 62;
+  if (t.krX === undefined) t.krX = 50;
+  if (t.krY === undefined) t.krY = 72;
+
+  // Reset hit areas
+  _thumbHitAreas = [];
+
+  ctx.textBaseline = 'middle';
+
+  // Layer 1: Pinyon Script (English cursive)
+  if (t.scriptText) {
+    const sfs = t.scriptSize * scale;
+    ctx.font = `400 ${sfs}px ${FONT_SCRIPT}`;
+    ctx.textAlign = 'center';
+    const sx = cw * (t.scriptX / 100);
+    const sy = ch * (t.scriptY / 100);
+    if (t.titleStroke) {
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur = 8 * scale;
+      ctx.shadowOffsetX = 2 * scale;
+      ctx.shadowOffsetY = 2 * scale;
+    }
+    ctx.fillStyle = t.titleColor;
+    const scriptLines = wrapThumbText(ctx, t.scriptText, cw * 0.85);
+    const scriptLineH = sfs * 1.1;
+    let maxW = 0;
+    scriptLines.forEach((line, i) => {
+      ctx.fillText(line, sx, sy + i * scriptLineH);
+      maxW = Math.max(maxW, ctx.measureText(line).width);
+    });
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+    // Store hit area
+    const totalH = scriptLines.length * scriptLineH;
+    _thumbHitAreas.push({ layer: 'script', x: sx - maxW/2, y: sy - sfs/2, w: maxW, h: totalH, xKey: 'scriptX', yKey: 'scriptY' });
+  }
+
+  // Layer 2: English CAPS (spaced uppercase)
+  if (t.capsText) {
+    const cfs = t.capsSize * scale;
+    ctx.font = `400 ${cfs}px ${FONT_CAPS}`;
+    const capsCx = cw * (t.capsX / 100);
+    const capsCy = ch * (t.capsY / 100);
+    if (t.titleStroke) { ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 4 * scale; }
+    ctx.fillStyle = t.capsColor || '#ffffff';
+    const capsStr = t.capsText.toUpperCase();
+    const spacing = 4 * scale;
+    let totalW = 0;
+    for (const c2 of capsStr) totalW += ctx.measureText(c2).width + spacing;
+    totalW -= spacing;
+    let cx2 = capsCx - totalW / 2;
+    ctx.textAlign = 'left';
+    for (const c2 of capsStr) {
+      ctx.fillText(c2, cx2, capsCy);
+      cx2 += ctx.measureText(c2).width + spacing;
+    }
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+    _thumbHitAreas.push({ layer: 'caps', x: capsCx - totalW/2, y: capsCy - cfs/2, w: totalW, h: cfs * 1.2, xKey: 'capsX', yKey: 'capsY' });
+  }
+
+  // Layer 3: Korean subtitle (210 디딤명조)
+  if (t.krText) {
+    const kfs = t.krSize * scale;
+    ctx.font = `400 ${kfs}px ${FONT_KR}`;
+    ctx.textAlign = 'center';
+    const kx = cw * (t.krX / 100);
+    const ky = ch * (t.krY / 100);
+    if (t.titleStroke) { ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 4 * scale; }
+    ctx.fillStyle = t.krColor || '#ffffff';
+    const krLines = wrapThumbText(ctx, t.krText, cw * 0.85);
+    const krLineH = kfs * 1.4;
+    let maxKW = 0;
+    krLines.forEach((line, i) => {
+      ctx.fillText(line, kx, ky + i * krLineH);
+      maxKW = Math.max(maxKW, ctx.measureText(line).width);
+    });
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+    const totalKH = krLines.length * krLineH;
+    _thumbHitAreas.push({ layer: 'kr', x: kx - maxKW/2, y: ky - kfs/2, w: maxKW, h: totalKH, xKey: 'krX', yKey: 'krY' });
+  }
+
+  // Draw selection border on active drag layer
+  if (_dragLayer) {
+    const ha = _thumbHitAreas.find(h => h.layer === _dragLayer);
+    if (ha) {
+      ctx.strokeStyle = 'rgba(196,162,101,0.7)';
+      ctx.lineWidth = 1.5 * scale;
+      ctx.setLineDash([4 * scale, 3 * scale]);
+      ctx.strokeRect(ha.x - 4*scale, ha.y - 4*scale, ha.w + 8*scale, ha.h + 8*scale);
+      ctx.setLineDash([]);
+    }
+  }
+
+  // Watermark
+  ctx.font = `${10 * scale}px ${FONT_CAPS}`;
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('@krystalha_', cw - 12 * scale, ch - 10 * scale);
+}
+
+function drawThumb() {
+  const canvas = document.getElementById('thumbCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const t = S.thumb;
+  const sz = THUMB_SIZES[t.size] || THUMB_SIZES.igstory;
+  const maxH = window.innerHeight - 220;
+  const scale = Math.min(380 / sz.w, maxH / sz.h);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  _drawThumbToCtx(ctx, canvas.width, canvas.height, scale);
+}
+
+function wrapThumbText(ctx, text, maxWidth) {
+  const lines = [];
+  let current = '';
+  for (const char of text) {
+    if (char === '\n') { lines.push(current); current = ''; continue; }
+    const test = current + char;
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = char;
+    } else { current = test; }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function handleThumbBg(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    S.thumb.bgImage = e.target.result;
+    _thumbBgImg = new Image();
+    _thumbBgImg.onload = () => { drawThumb(); renderMain(); };
+    _thumbBgImg.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function applyThumbTemplate(id) {
+  const tpl = THUMB_TEMPLATES.find(t => t.id === id);
+  if (!tpl) return;
+  S.thumb.template = id;
+  tpl.apply(S.thumb);
+  renderMain();
+}
+
+function downloadThumb() {
+  const t = S.thumb;
+  const sz = THUMB_SIZES[t.size] || THUMB_SIZES.igstory;
+  const canvas = document.createElement('canvas');
+  canvas.width = sz.w; canvas.height = sz.h;
+  const ctx = canvas.getContext('2d');
+  _drawThumbToCtx(ctx, sz.w, sz.h, 1);
+  canvas.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `thumbnail_${t.size}_${Date.now()}.png`;
+    a.click();
+  }, 'image/png');
+}
+
+function saveThumb() {
+  const canvas = document.getElementById('thumbCanvas');
+  const preview = canvas.toDataURL('image/png');
+  const name = S.thumb.title || `썸네일 ${S.thumbs.length + 1}`;
+  S.thumbs.push({ name, preview, config: JSON.parse(JSON.stringify(S.thumb)), date: fmt(new Date()) });
+  save('thumbs', S.thumbs);
+  renderMain();
+}
+
+function deleteThumb(i) {
+  S.thumbs.splice(i, 1);
+  save('thumbs', S.thumbs);
+  renderMain();
+}
+
+function resetThumb() {
+  S.thumb = {
+    size:'igstory', bg:'#1a1a1a', bgImage:null, overlay:0.15, gradientStrength:0.7,
+    scriptText:'Tips from', capsText:'NEW YORK', krText:'뉴욕 예술경영에서 배운 현명한 소비 법',
+    titleColor:'#ffffff', capsColor:'#ffffff', krColor:'#ffffff',
+    scriptSize:72, capsSize:18, krSize:24,
+    scriptX:50, scriptY:55, capsX:50, capsY:62, krX:50, krY:72,
+    titleStroke:false, titleStrokeColor:'rgba(0,0,0,0.5)',
+    badge:'', badgeColor:'#c4a265', badgeBg:'#000000',
+    template:'krystal', accentColor:'#ffffff',
+  };
+  _thumbBgImg = null;
+  _dragLayer = null;
+  renderMain();
+}
+
+// ─── Modal ───
+function showModal(html) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay'; overlay.id = 'modal-overlay';
+  overlay.onclick = e => { if (e.target === overlay) closeModal(); };
+  overlay.innerHTML = `<div class="modal">${html}</div>`;
+  document.body.appendChild(overlay);
+}
+function closeModal() { const el = document.getElementById('modal-overlay'); if (el) el.remove(); }
+
+// ─── Utility ───
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// ─── Init ───
+initBrandDB();
+renderNav();
+renderMain();
+</script>
+</body>
+</html>
